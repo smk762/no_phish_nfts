@@ -32,5 +32,13 @@ class GlobalConfig(BaseConfig):
     def async_database_url(self) -> str:
         return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.postgres_server}:{self.postgres_port}/{self.postgres_db}"
 
+    @property
+    def sync_database_url_local(self) -> str:
+        return f"postgresql://{self.postgres_user}:{self.postgres_password}@localhost:{self.postgres_port}/{self.postgres_db}"
+
+    @property
+    def async_database_url_local(self) -> str:
+        return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@localhost:{self.postgres_port}/{self.postgres_db}"
+
 
 settings = GlobalConfig()

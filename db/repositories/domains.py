@@ -1,8 +1,9 @@
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+from db.sessions import dump_domains
 
 from db.errors import EntityDoesNotExist
 from db.tables.domains import Domain
@@ -30,11 +31,24 @@ class DomainRepository:
 
         return DomainRead(**db_domain.dict())
 
-    async def list(self, limit: int = 10, offset: int = 0) -> list[DomainRead]:
+    async def list(self, limit: int = 10, offset: int = 0, all = 0) -> List[DomainRead]:
+        if all == 1:
+            statement = (
+                (select(Domain).where(1 == 1))
+            )
+        else:
+            statement = (
+                (select(Domain).where(1 == 1))
+                .offset(offset)
+                .limit(limit)
+            )
+        results = await self.session.exec(statement)
+
+        return [DomainRead(**domain.dict()) for domain in results]
+    
+    async def list_all(self) -> List[DomainRead]:
         statement = (
             (select(Domain).where(1 == 1))
-            .offset(offset)
-            .limit(limit)
         )
         results = await self.session.exec(statement)
 

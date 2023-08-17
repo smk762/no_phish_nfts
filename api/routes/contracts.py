@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
@@ -28,7 +28,7 @@ async def add_contract(
 
 @router.get(
     "/contract/{network}/contract_list",
-    response_model=list[Optional[ContractRead]],
+    response_model=List[Optional[ContractRead]],
     status_code=status.HTTP_200_OK,
     name="get_contract_list",
 )
@@ -36,7 +36,7 @@ async def get_contract_list(
     limit: int = Query(default=10, lte=100),
     offset: int = Query(default=0),
     repository: ContractRepository = Depends(get_repository(ContractRepository)),
-) -> list[Optional[ContractRead]]:
+) -> List[Optional[ContractRead]]:
     return await repository.list(limit=limit, offset=offset)
 
 

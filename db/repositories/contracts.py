@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 
 from sqlmodel import select
@@ -32,7 +32,7 @@ class ContractRepository:
 
         return ContractRead(**db_contract.dict())
 
-    async def list(self, limit: int = 10, offset: int = 0) -> list[ContractRead]:
+    async def list(self, limit: int = 10, offset: int = 0) -> List[ContractRead]:
         statement = (
             (select(Contract).where(Contract.status != NetworkEnum.deleted))
             .offset(offset)

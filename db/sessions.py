@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import select
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -10,6 +11,11 @@ from db.tables.contracts import Contract
 
 engine = create_engine(
     url=settings.sync_database_url,
+    echo=settings.db_echo_log,
+)
+
+local_engine = create_engine(
+    url=settings.sync_database_url_local,
     echo=settings.db_echo_log,
 )
 
@@ -24,12 +30,22 @@ async_session = sessionmaker(
 )
 
 
-def add_domain(url, source=""):
+def add_domain(url, source="", local=False):
     domain = Domain(url=url, source=source)
-
-    with Session(engine) as session:
+    eng = engine
+    if local:
+        eng = local_engine
+        
+    with Session(eng) as session:
         session.add(domain)
         session.commit()
+
+
+def dump_domains():
+    with Session(local_engine) as session:
+        r = session.execute((select(Domain.url)))
+        data = [i.url for i in r]
+        return data
 
 
 def add_contract(address, network):

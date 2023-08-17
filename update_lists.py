@@ -4,12 +4,22 @@ import json
 from pathlib import Path
 import requests 
 import tarfile
+import asyncio
 from os import listdir
 from os.path import isfile, join, basename, exists, realpath, dirname
-
+from db.sessions import dump_domains, add_domain
+from typing import Optional, List
+from fastapi import Depends
+from api.dependencies.repositories import get_repository
+from db.repositories.domains import DomainRepository
+from db.schemas.domains import DomainAdd, DomainRead
 
 
 script_path = realpath(dirname(__file__))
+
+def get_domain_list():
+    return dump_domains()
+
 
 def files_in_folder(folder):
     return [f for f in listdir(folder) if isfile(join(folder, f))]
@@ -57,22 +67,25 @@ def process_lists(list_type, urls, cron=True):
                 f.write(get_text_file(url))
         print(f"Updated {url}")
 
+
 def migrate_lists():
-    r = requests.get("http://192.168.1.203:8000/api/blocklist/domain/domain_list?all=1")
-    known_domains = 
+    known_domains = get_domain_list()
+    if known_domains:
+        print(f"{len(known_domains)} domains in the blocklist")
     for list_type in ["contracts", "domains"]:
         folder = f"{script_path}/lists/{list_type}"
         files = files_in_folder(folder)
         for file in files:
             if file.endswith(".txt"):
                 with open(f"{folder}/{file}") as f:
-                    for domain in f.readlines():
-                        domain = domain.strip()
-                        print(f"Adding {domain} from {file}...")
-                        add_domain_to_db(domain)
+                    domains = set([i.strip() for i in f.readlines()])
+                    domains = list(domains - set(known_domains))
+                    for domain in domains:
+                        if domain not in known_domains:
+                            print(f"Adding {domain} from {file}...")
+                            add_domain(domain, file, True)
             else:
                 print(f"Skipping {file}, it is not a text file...")
-
 
 
 if __name__ == '__main__':

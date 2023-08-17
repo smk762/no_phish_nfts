@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
@@ -29,7 +29,7 @@ async def add_domain(
 
 @router.get(
     "/domain/domain_list",
-    response_model=list[Optional[DomainRead]],
+    response_model=List[Optional[DomainRead]],
     status_code=status.HTTP_200_OK,
     name="get_domain_list",
 )
@@ -37,7 +37,7 @@ async def get_domain_list(
     limit: int = Query(default=10, lte=100),
     offset: int = Query(default=0),
     repository: DomainRepository = Depends(get_repository(DomainRepository)),
-) -> list[Optional[DomainRead]]:
+) -> List[Optional[DomainRead]]:
     return await repository.list(limit=limit, offset=offset)
 
 
