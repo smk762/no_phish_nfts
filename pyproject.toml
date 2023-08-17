@@ -1,0 +1,28 @@
+# pyproject.toml
+
+[tool.poetry]
+name = "no-phish-nfts"
+version = "0.0.1"
+description = "Simple API to check domains and contract addresses against a blocklist stored in a PGSQL database"
+authors = ["smk <smk@komodoplatform.com>"]
+homepage = "https://github.com/smk762/no_phish_nfts"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+sqlmodel = "^0.0.8"
+psycopg2-binary = "^2.9.7"
+sqlalchemy = "1.4.41"
+asyncpg = "^0.28.0"
+uvicorn = "^0.23.2"
+fastapi = "^0.101.1"
+python-dotenv = "^1.0.0"
+requests = "^2.31.0"
+
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+black = "^21.9b0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

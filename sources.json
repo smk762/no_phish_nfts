@@ -1,0 +1,14 @@
+{
+    "domains": {
+        "init": [
+            "https://raw.githubusercontent.com/mitchellkrogza/Phishing.Database/master/ALL-phishing-domains.tar.gz"
+        ],
+        "cron": [
+            "https://raw.githubusercontent.com/mitchellkrogza/Phishing.Database/master/phishing-links-NEW-today.txt"
+        ]
+    },
+    "contracts": {
+        "init": [],
+        "cron": []
+    }
+}

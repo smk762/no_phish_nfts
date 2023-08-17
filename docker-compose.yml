@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  fastapi_nft:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    hostname: fastapi_nft
+    container_name: fastapi_nft
+    depends_on:
+      - pgsql_db
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./:/home/app
+    networks:
+      - nft-net
+
+  pgsql_db:
+    image: postgres:14.3-alpine
+    hostname: pgsql_db
+    container_name: pgsql_db
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-postgres:/var/lib/postgresql/data
+    networks:
+      - nft-net
+
+volumes:
+  db-postgres:
+    driver: local
+
+networks:
+  nft-net:
+    external: true
+  
