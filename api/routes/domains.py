@@ -7,6 +7,8 @@ from api.dependencies.repositories import get_repository
 from db.errors import EntityDoesNotExist
 from db.repositories.domains import DomainRepository
 from db.schemas.domains import DomainAdd, DomainPatch, DomainRead
+from db.sessions import is_domain_bad
+
 
 router = APIRouter()
 
@@ -42,17 +44,16 @@ async def get_domain_list(
 
 
 @router.get(
-    "/domain/{domain}",
+    "/domain/{url}",
     response_model=bool,
     status_code=status.HTTP_200_OK,
     name="check_domain",
 )
 async def check_domain(
-    domain: str,
+    url: str,
     repository: DomainRepository = Depends(get_repository(DomainRepository)),
 ) -> bool:
-    # TODO: Is domain in blocklist?
-    return False
+    return is_domain_bad(url)
 
 
 @router.delete(

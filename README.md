@@ -15,7 +15,7 @@ This repo serves an API to check if a domain or contract address has been identi
 ## Crons
 
 - Add block list sources to `sources.json`
-- Setup a crontab entry like `0 0 * * 1 /home/user/no_phish_nfts/update_blocklists.sh` to refresh the lists every 24 hours.
+- Setup a crontab entry like `0 0 * * 1 /home/user/no_phish_nfts/update_lists.py` to refresh the lists every 24 hours.
 
 
 ## Stack

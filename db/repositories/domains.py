@@ -45,14 +45,6 @@ class DomainRepository:
         results = await self.session.exec(statement)
 
         return [DomainRead(**domain.dict()) for domain in results]
-    
-    async def list_all(self) -> List[DomainRead]:
-        statement = (
-            (select(Domain).where(1 == 1))
-        )
-        results = await self.session.exec(statement)
-
-        return [DomainRead(**domain.dict()) for domain in results]
 
     async def get(self, domain_id: UUID) -> Optional[DomainRead]:
         db_domain = await self._get_instance(domain_id)

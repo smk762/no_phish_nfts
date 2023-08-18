@@ -79,7 +79,8 @@ def migrate_lists():
             if file.endswith(".txt"):
                 with open(f"{folder}/{file}") as f:
                     domains = set([i.strip() for i in f.readlines()])
-                    domains = list(domains - set(known_domains))
+                    domains = domains - set(known_domains)
+                    domains = [i.replace("http://", "").replace("http://", "") for i in domains]
                     for domain in domains:
                         if domain not in known_domains:
                             print(f"Adding {domain} from {file}...")

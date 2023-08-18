@@ -8,7 +8,6 @@ from core.config import settings
 from db.tables.domains import Domain
 from db.tables.contracts import Contract
 
-
 engine = create_engine(
     url=settings.sync_database_url,
     echo=settings.db_echo_log,
@@ -46,6 +45,17 @@ def dump_domains():
         r = session.execute((select(Domain.url)))
         data = [i.url for i in r]
         return data
+
+
+def is_domain_bad(url: str) -> bool:
+    url = url.replace("http://", "").replace("http://", "")
+    with Session(engine) as session:
+        sql = (select(Domain.url).where(Domain.url == url).limit(1))
+        r = session.execute(sql)
+        data = [i.url for i in r]
+        if len(data) == 0:
+            return False
+        return True
 
 
 def add_contract(address, network):

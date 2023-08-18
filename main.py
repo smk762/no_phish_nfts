@@ -4,6 +4,9 @@ from core.config import settings
 from api.router import router
 from db.sessions import create_tables
 
+import logging
+
+logger = logging.getLogger('fastapi')
 
 app = FastAPI(
     title=settings.title,
