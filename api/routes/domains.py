@@ -44,16 +44,16 @@ async def get_domain_list(
 
 
 @router.get(
-    "/domain/{url}",
+    "/domain/{domain}",
     response_model=bool,
     status_code=status.HTTP_200_OK,
     name="check_domain",
 )
 async def check_domain(
-    url: str,
+    domain: str,
     repository: DomainRepository = Depends(get_repository(DomainRepository)),
 ) -> bool:
-    return is_domain_bad(url)
+    return is_domain_bad(domain)
 
 
 @router.delete(
