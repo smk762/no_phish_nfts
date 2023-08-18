@@ -4,6 +4,7 @@ from db.tables.base_class import NetworkEnum, TimestampModel, UUIDModel
 
 class ContractBase(SQLModel):
     address: str = Field(nullable=False)
+    source: str = Field(nullable=False, default="")
 
 
 class Contract(ContractBase, UUIDModel, TimestampModel, table=True):
