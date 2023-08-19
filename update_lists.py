@@ -16,6 +16,7 @@ from api.dependencies.repositories import get_repository
 from db.repositories.domains import DomainRepository
 from db.schemas.domains import DomainAdd, DomainRead
 from core.config import settings
+from logger import logger
 
 
 script_path = realpath(dirname(__file__))
@@ -41,7 +42,6 @@ def get_json_file(link):
 def extract_tar_url(url, extract_path, fn):
     response = requests.get(url, stream=True)
     if response.status_code == 200:
-        print(f"{extract_path}/{fn}")
         with open(f"{extract_path}/{fn}", 'wb') as f:
             f.write(response.raw.read())
         with tarfile.open(f"{extract_path}/{fn}", mode="r:gz") as tf:
@@ -72,15 +72,18 @@ def update_source_files(list_type, urls, cron=True):
         elif fn.endswith(".json"):
             with open(f"{list_path}/{fn}", 'w') as f:
                 json.dump(get_json_file(url), f)
-        print(f"Updated {url}")
+        logger.info(f"Updated {url}")
 
 
 def update_db():
     known_domains = dump_domains()
     known_contracts = {}
     for network in ["Polygon", "Eth", "Bsc", "Avalanche", "Fantom"]:
-        migrate_alchemy_spam_contracts(network, known_contracts)
         known_contracts[network] = dump_contracts(network)
+        migrate_alchemy_spam_contracts(network, known_contracts[network])
+        # Doing again to include the contracs added from alchemy
+        known_contracts[network] = dump_contracts(network)
+        
         
     for list_type in ["contracts", "domains"]:
         folder = f"{script_path}/lists/{list_type}"
@@ -106,7 +109,7 @@ def update_db():
                             data = data["blacklist"]
                         add_domains(data, file, known_domains)
             else:
-                print(f"Skipping {file}, it is not a text file...")
+                logger.warning(f"Skipping {file}, it is not a text file...")
 
 
 def migrate_alchemy_spam_contracts(network, known_contracts):
@@ -125,44 +128,43 @@ def migrate_alchemy_spam_contracts(network, known_contracts):
         elif network == "Opt":
             url = f"https://opt-mainnet.g.alchemy.com/nft/v2/{api_key}/getSpamContracts"
         '''
-    try:
-        data = requests.get(url).json()
-        addresses = list(set(data) - set(known_contracts))
-        print(f"{len(addresses)} contract addresses to process for {network} from {source}...")
-        for i in addresses:
-            add_contract(source, network, i, True)
-            print(f"[{source}] Added {i} for {network}")
-    except Exception as e:
-        print(e)
+    data = requests.get(url).json()
+    addresses = list(set(data) - set(known_contracts))
+    logger.info(f"{len(addresses)} contract addresses to process for {network} from {source}...")
+    logger.info(f"{len(known_contracts)} known_contracts for {network} from {source}...")
+    for address in addresses:
+        try:
+            add_contract(source, network, address, True)
+            logger.info(f"[{source}] Added {address} for {network}")
+        except Exception as e:
+            logger.error(e)
 
 
 def add_contracts(source, network, contracts, known_contracts):
     contracts = list(set(contracts) - set(known_contracts))
     for address in contracts:
         add_contract(source, network, address, True)
-        print(f"[{source}] Added {address} for {network}")
+        logger.info(f"[{source}] Added {address} for {network}")
 
 
 def add_domains(domains, source, known_domains):
     if known_domains:
-        print(f"{len(known_domains)} domains in the blocklist")
+        logger.info(f"{len(known_domains)} domains in the blocklist")
     # Remove protocol prefix
     domains = [i.replace("http://", "").replace("https://", "") for i in domains]
     # Remove path suffix
     domains = [i.split("/")[0] for i in domains]
     domains = list(set(domains) - set(known_domains))
     for domain in domains:
-        print(f"Adding {domain} from {source}...")
+        logger.info(f"Adding {domain} from {source}...")
         add_domain(domain, source, True)
 
 
 
 if __name__ == '__main__':
-    try:
-        #print(f'google safe: {check_google_safebrowsing("04323ss.com", True)}')
-        print(f'google safe: {check_google_safebrowsing("twitter.com", True)}')
-    except Exception as e:
-        print(e)
+    # TODO: Move to tests
+    logger.info(f'Is ethercb.com google safe?: {check_google_safebrowsing("04323ss.com", True)}')
+    logger.info(f'Is twitter.com google safe?: {check_google_safebrowsing("twitter.com", True)}')
     # Process domains.
     remove_stale_google_domains(True)
     update_source_data()
