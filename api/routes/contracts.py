@@ -7,6 +7,7 @@ from api.dependencies.repositories import get_repository
 from db.errors import EntityDoesNotExist
 from db.repositories.contracts import ContractRepository
 from db.schemas.contracts import ContractAdd, ContractPatch, ContractRead
+from db.sessions import is_contract_bad
 
 router = APIRouter()
 
@@ -47,12 +48,11 @@ async def get_contract_list(
     name="check_contract",
 )
 async def check_contract(
-    limit: int = Query(default=10, lte=100),
-    offset: int = Query(default=0),
+    network: str,
+    address: str,
     repository: ContractRepository = Depends(get_repository(ContractRepository)),
 ) -> bool:
-    # TODO: Is contract in blocklist?
-    return await repository.list(limit=limit, offset=offset)
+    return is_contract_bad(network, address)
 
 
 @router.delete(
