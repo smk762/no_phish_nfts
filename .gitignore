@@ -1,5 +1,6 @@
 # Custom
-lists/
+lists/domains/*
+lists/contracts/*
 !custom.json
 
 # Byte-compiled / optimized / DLL files
