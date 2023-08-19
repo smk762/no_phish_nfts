@@ -24,6 +24,7 @@ class GlobalConfig(BaseConfig):
     postgres_db_tests: str = os.environ.get("POSTGRES_DB_TESTS")
     db_echo_log: bool = True if os.environ.get("DEBUG") == "True" else False
     alchemy_api_key: str = os.environ.get("ALCHEMY_API_KEY")
+    google_api_key: str = os.environ.get("GOOGLE_API_KEY")
 
     @property
     def sync_database_url(self) -> str:
