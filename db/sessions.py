@@ -5,10 +5,13 @@ from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
 import requests
 import time
+import sys
+import os
 
 from core.config import settings
 from db.tables.domains import Domain
 from db.tables.contracts import Contract
+from logger import logger
 
 engine = create_engine(
     url=settings.sync_database_url,
@@ -95,6 +98,7 @@ def remove_stale_google_domains(local=False):
 # https://console.cloud.google.com/tos?id=safebrowsing
 def check_google_safebrowsing(url: str, local=False, update_db=True) -> bool:
     baseurl = "https://safebrowsing.googleapis.com/v4/threatMatches:find"
+    logger.info(baseurl)
     params = f"key={settings.google_api_key}"
     headers = {"Content-Type": "application/json"}
     body = {
@@ -111,7 +115,11 @@ def check_google_safebrowsing(url: str, local=False, update_db=True) -> bool:
                 "POTENTIALLY_HARMFUL_APPLICATION"
             ],
             "platformTypes": ["ANY_PLATFORM"],
-            "threatEntryTypes": ["URL"],
+            "threatEntryTypes": [
+                "URL",
+                "THREAT_ENTRY_TYPE_UNSPECIFIED",
+                "EXECUTABLE"
+            ],
             "threatEntries": [
                 {"url": url}
             ]
@@ -120,11 +128,18 @@ def check_google_safebrowsing(url: str, local=False, update_db=True) -> bool:
     r = requests.post(f"{baseurl}?{params}", headers=headers, json=body).json()
     # 04323ss.com: {'matches': [{'threatType': 'SOCIAL_ENGINEERING', 'platformType': 'ANY_PLATFORM', 'threat': {'url': '04323ss.com'},
     # 'cacheDuration': '300s', 'threatEntryType': 'URL'}]}
+    logger.debug(r)
     if "matches" in r:
         if "cacheDuration" in r["matches"][0]:
+            
             cache = int(r["matches"][0]["cacheDuration"][:-1])
             if update_db:
-                add_domain(url, "google", local, cache)
+                remove_stale_google_domains(local)
+                try:
+                    add_domain(url, "google", local, cache)
+                except Exception as e:
+                    logger.error(e)
+                    
         return True
     return False
 
@@ -132,10 +147,18 @@ def check_google_safebrowsing(url: str, local=False, update_db=True) -> bool:
 def is_domain_bad(url: str) -> bool:
     url = url.replace("http://", "").replace("http://", "")
     with Session(engine) as session:
-        sql = (select(Domain.url).where(Domain.url == url).limit(1))
-        if len([i.url for i in session.execute(sql)]) == 0:
+        sql = (
+            select(Domain.url)
+            .where(Domain.updated + Domain.cache < int(time.time()))
+            .where(Domain.url == url)
+            .limit(1)
+        )
+        data = [i.url for i in session.execute(sql)]
+        logger.info(data)
+        if len(data) == 0:
+            logger.warning(f"No entries for {url} in DB")
             return check_google_safebrowsing(url)
-        return False
+        return True
 
 
 def create_tables():
