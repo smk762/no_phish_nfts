@@ -7,7 +7,7 @@ from db.sessions import create_tables
 
 import logging
 
-logger = logging.getLogger('fastapi')
+from logger import logger
 
 app = FastAPI(
     title=settings.title,
