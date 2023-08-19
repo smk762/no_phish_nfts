@@ -46,9 +46,10 @@ class CustomFormatter(logging.Formatter):
 
 
 # create logger with project folder name
-logger_app_name = os.path.dirname(os.path.realpath(sys.argv[0])).split("/")[-1]
-logger = logging.getLogger(logger_app_name)
+logging.basicConfig()
+logger = logging.getLogger('custom')
 logger.setLevel(logging.DEBUG)
+logger.propagate = False
 
 # create console handler with a higher log level
 handler = logging.StreamHandler()
