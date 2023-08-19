@@ -93,7 +93,7 @@ def remove_stale_google_domains(local=False):
 
 
 # https://console.cloud.google.com/tos?id=safebrowsing
-def check_google_safebrowsing(url: str, local=False) -> bool:
+def check_google_safebrowsing(url: str, local=False, update_db=True) -> bool:
     baseurl = "https://safebrowsing.googleapis.com/v4/threatMatches:find"
     params = f"key={settings.google_api_key}"
     headers = {"Content-Type": "application/json"}
@@ -123,7 +123,8 @@ def check_google_safebrowsing(url: str, local=False) -> bool:
     if "matches" in r:
         if "cacheDuration" in r["matches"][0]:
             cache = int(r["matches"][0]["cacheDuration"][:-1])
-            add_domain(url, "google", local, cache)
+            if update_db:
+                add_domain(url, "google", local, cache)
         return True
     return False
 

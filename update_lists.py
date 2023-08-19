@@ -163,8 +163,8 @@ def add_domains(domains, source, known_domains):
 
 if __name__ == '__main__':
     # TODO: Move to tests
-    logger.info(f'Is ethercb.com google safe?: {check_google_safebrowsing("04323ss.com", True)}')
-    logger.info(f'Is twitter.com google safe?: {check_google_safebrowsing("twitter.com", True)}')
+    logger.info(f'Is ethercb.com google safe?: {check_google_safebrowsing("04323ss.com", True, False)}')
+    logger.info(f'Is twitter.com google safe?: {check_google_safebrowsing("twitter.com", True, False)}')
     # Process domains.
     remove_stale_google_domains(True)
     update_source_data()
