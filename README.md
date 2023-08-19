@@ -12,11 +12,6 @@ This repo serves an API to check if a domain or contract address has been identi
 [POST] `blocklist/add_domain/{domain}` - Requires authentication. Adds a new domain to the domain block list.
 [POST] `blocklist/add_contract/{network}/{address}` - Requires authentication. Adds a new contract to the NFT contracts block list.
 
-## Crons
-
-- Add block list sources to `sources.json`
-- Setup a crontab entry like `0 0 * * 1 /home/user/no_phish_nfts/update_lists.py` to refresh the lists every 24 hours.
-
 
 ## Stack
 
@@ -34,6 +29,7 @@ Docker
  - Docker linux post install steps: https://docs.docker.com/engine/install/linux-postinstall/ , Configure Docker to start on boot with systemd
  - 20GB+ disk space free
  - [PgSQL Dependencies] `sudo apt install libpq-dev`
+ - [Poetry](https://python-poetry.org/) python dependency management tool
 
 
 ### Make Docker respect UFW
@@ -59,5 +55,17 @@ sudo systemctl restart docker
 
 ### Install API
 
-- clone repo `git clone https://github.com/smk762/no_phish_nfts`
+- Clone repo `git clone https://github.com/smk762/no_phish_nfts`
 - Create network for project with `docker network create nft-net`
+- Copy `.env.example` to `.env` and populate with required environment variables
+- Run `poetry install` to install dependencies
+- Run `docker compose build` to build the containers
+- Run `docker compose up -d` to run the containers as a daemon
+- Run `docker compose logs -f --tail 33` to view runtime logs
+
+
+## Crons
+
+- Add block list sources to `sources.json`
+- Add custom entries in `lists/*/custom.json`
+- Setup a crontab entry like `0 0 * * * poetry run /home/user/no_phish_nfts/update_lists.py` to refresh the lists every 24 hours at midnight.
