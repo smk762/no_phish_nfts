@@ -83,8 +83,6 @@ def update_db():
         migrate_alchemy_spam_contracts(network, known_contracts[network])
         # Doing again to include the contracs added from alchemy
         known_contracts[network] = dump_contracts(network)
-        
-        
     for list_type in ["contracts", "domains"]:
         folder = f"{script_path}/lists/{list_type}"
         files = files_in_folder(folder)
@@ -108,8 +106,13 @@ def update_db():
                         if "blacklist" in data:
                             data = data["blacklist"]
                         add_domains(data, file, known_domains)
+            elif file.endswith(".tar.gz"):
+                continue
+            elif file.endswith(".zip"):
+                continue                
             else:
-                logger.warning(f"Skipping {file}, it is not a text file...")
+                logger.warning(f"Skipping {file}, it is not a regoconised format...")
+                time.sleep(3)
 
 
 def migrate_alchemy_spam_contracts(network, known_contracts):
@@ -138,6 +141,7 @@ def migrate_alchemy_spam_contracts(network, known_contracts):
             logger.info(f"[{source}] Added {address} for {network}")
         except Exception as e:
             logger.error(e)
+            time.sleep(3)
 
 
 def add_contracts(source, network, contracts, known_contracts):
@@ -160,7 +164,6 @@ def add_domains(domains, source, known_domains):
         add_domain(domain, source, True)
 
 
-
 if __name__ == '__main__':
     # TODO: Move to tests
     logger.info(f'Is ethercb.com google safe?: {check_google_safebrowsing("04323ss.com", True, False)}')
@@ -169,4 +172,3 @@ if __name__ == '__main__':
     remove_stale_google_domains(True)
     update_source_data()
     update_db()
-
