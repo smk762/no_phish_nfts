@@ -75,6 +75,12 @@ def add_domain(url, source="", local=False, cache=200000000):
         session.commit()
 
 
+def dump_domains():
+    with Session(local_engine) as session:
+        r = session.execute((select(Domain.url)))
+        return [i.url for i in r]
+
+
 def remove_stale_google_domains(local=False):
     eng = engine
     if local:
@@ -84,11 +90,6 @@ def remove_stale_google_domains(local=False):
         sql = delete(Domain).where(Domain.updated + Domain.cache < int(time.time()))
         session.execute(sql)
         session.commit()
-
-def dump_domains():
-    with Session(local_engine) as session:
-        r = session.execute((select(Domain.url)))
-        return [i.url for i in r]
 
 
 # https://console.cloud.google.com/tos?id=safebrowsing
@@ -117,11 +118,9 @@ def check_google_safebrowsing(url: str, local=False) -> bool:
         }
     }
     r = requests.post(f"{baseurl}?{params}", headers=headers, json=body).json()
-    print(f"{url}: {r}")
     # 04323ss.com: {'matches': [{'threatType': 'SOCIAL_ENGINEERING', 'platformType': 'ANY_PLATFORM', 'threat': {'url': '04323ss.com'},
     # 'cacheDuration': '300s', 'threatEntryType': 'URL'}]}
     if "matches" in r:
-        print(r["matches"][0])
         if "cacheDuration" in r["matches"][0]:
             cache = int(r["matches"][0]["cacheDuration"][:-1])
             add_domain(url, "google", local, cache)
