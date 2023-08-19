@@ -1,32 +1,41 @@
 #!/usr/bin/env python3
 import os
 import json
+import time
 from pathlib import Path
 import requests 
 import tarfile
 import asyncio
 from os import listdir
 from os.path import isfile, join, basename, exists, realpath, dirname
-from db.sessions import dump_domains, add_domain
+from db.sessions import add_domain, dump_domains, add_contract, \
+    dump_contracts, check_google_safebrowsing, remove_stale_google_domains
 from typing import Optional, List
 from fastapi import Depends
 from api.dependencies.repositories import get_repository
 from db.repositories.domains import DomainRepository
 from db.schemas.domains import DomainAdd, DomainRead
+from core.config import settings
 
 
 script_path = realpath(dirname(__file__))
 
-def get_domain_list():
-    return dump_domains()
+def create_list_folder(list_type):    
+    Path(f"{script_path}/lists/{list_type}").mkdir(parents=True, exist_ok=True)
 
 
 def files_in_folder(folder):
     return [f for f in listdir(folder) if isfile(join(folder, f))]
 
 
-def create_list_folder(list_type):    
-    Path(f"{script_path}/lists/{list_type}").mkdir(parents=True, exist_ok=True)
+def get_text_file(link):
+    data = requests.get(link)
+    return data.text
+
+
+def get_json_file(link):
+    data = requests.get(link)
+    return data.json()
 
 
 def extract_tar_url(url, extract_path, fn):
@@ -35,26 +44,21 @@ def extract_tar_url(url, extract_path, fn):
         print(f"{extract_path}/{fn}")
         with open(f"{extract_path}/{fn}", 'wb') as f:
             f.write(response.raw.read())
-            with tarfile.open(f, mode="r:gz") as tf:
-                tf.extractall(extract_path)
+        with tarfile.open(f"{extract_path}/{fn}", mode="r:gz") as tf:
+            tf.extractall(extract_path)
 
 
-def get_text_file(link):
-    data = requests.get(link)
-    return data.text
-
-
-def process_source_lists():
+def update_source_data():
     with open(f"{script_path}/sources.json") as f:
         sources = json.load(f)
-    for i in ["domains", "contracts"]:
-        create_list_folder(i)
-        for j in ["init", "cron"]:
-            urls = sources[i][j]
-            process_lists(i, urls, j == "cron")
+    for list_type in ["domains", "contracts"]:
+        create_list_folder(list_type)
+        for list_category in ["init", "cron"]:
+            urls = sources[list_type][list_category]
+            update_source_files(list_type, urls, list_category == "cron")
 
 
-def process_lists(list_type, urls, cron=True):
+def update_source_files(list_type, urls, cron=True):
     for url in urls:
         fn = basename(url)
         list_path = f"{script_path}/lists/{list_type}"
@@ -65,31 +69,102 @@ def process_lists(list_type, urls, cron=True):
         elif fn.endswith(".txt"):
             with open(f"{list_path}/{fn}", 'w') as f:
                 f.write(get_text_file(url))
+        elif fn.endswith(".json"):
+            with open(f"{list_path}/{fn}", 'w') as f:
+                json.dump(get_json_file(url), f)
         print(f"Updated {url}")
 
 
-def migrate_lists():
-    known_domains = get_domain_list()
-    if known_domains:
-        print(f"{len(known_domains)} domains in the blocklist")
+def update_db():
+    known_domains = dump_domains()
+    known_contracts = {}
+    for network in ["Polygon", "Eth", "Bsc", "Avalanche", "Fantom"]:
+        migrate_alchemy_spam_contracts(network, known_contracts)
+        known_contracts[network] = dump_contracts(network)
+        
     for list_type in ["contracts", "domains"]:
         folder = f"{script_path}/lists/{list_type}"
         files = files_in_folder(folder)
         for file in files:
             if file.endswith(".txt"):
                 with open(f"{folder}/{file}") as f:
-                    domains = set([i.strip() for i in f.readlines()])
-                    domains = domains - set(known_domains)
-                    domains = [i.replace("http://", "").replace("http://", "") for i in domains]
-                    for domain in domains:
-                        if domain not in known_domains:
-                            print(f"Adding {domain} from {file}...")
-                            add_domain(domain, file, True)
+                    data = set([i.strip() for i in f.readlines()])
+                    if list_type == "contracts":
+                        # TODO: Currently there is no txt file source for contracts
+                        # When there is, we'll need to define network here
+                        add_contracts(file, "unknown", data, known_contracts[network])
+                    elif list_type == "domains":
+                        add_domains(data, file, known_domains)
+            elif file.endswith(".json"):
+                with open(f"{folder}/{file}") as f:
+                    data = json.load(f)
+                    if list_type == "contracts":
+                        if network in data:
+                            add_contracts(file, network, data, known_contracts[network])
+                    elif list_type == "domains":                        
+                        if "blacklist" in data:
+                            data = data["blacklist"]
+                        add_domains(data, file, known_domains)
             else:
                 print(f"Skipping {file}, it is not a text file...")
 
 
+def migrate_alchemy_spam_contracts(network, known_contracts):
+    source = "alchemy"
+    api_key = settings.alchemy_api_key
+    if network == "Polygon":
+        url = f"https://polygon-mainnet.g.alchemy.com/nft/v2/{api_key}/getSpamContracts"
+    elif network == "Eth":
+        url = f"https://eth-mainnet.g.alchemy.com/nft/v2/{api_key}/getSpamContracts"
+    else:
+        return
+        # Other networks not yet supported
+        '''
+        elif network == "Arb":
+            url = f"https://arb-mainnet.g.alchemy.com/nft/v2/{api_key}/getSpamContracts"
+        elif network == "Opt":
+            url = f"https://opt-mainnet.g.alchemy.com/nft/v2/{api_key}/getSpamContracts"
+        '''
+    try:
+        data = requests.get(url).json()
+        addresses = list(set(data) - set(known_contracts))
+        print(f"{len(addresses)} contract addresses to process for {network} from {source}...")
+        for i in addresses:
+            add_contract(source, network, i, True)
+            print(f"[{source}] Added {i} for {network}")
+    except Exception as e:
+        print(e)
+
+
+def add_contracts(source, network, contracts, known_contracts):
+    contracts = list(set(contracts) - set(known_contracts))
+    for address in contracts:
+        add_contract(source, network, address, True)
+        print(f"[{source}] Added {address} for {network}")
+
+
+def add_domains(domains, source, known_domains):
+    if known_domains:
+        print(f"{len(known_domains)} domains in the blocklist")
+    # Remove protocol prefix
+    domains = [i.replace("http://", "").replace("https://", "") for i in domains]
+    # Remove path suffix
+    domains = [i.split("/")[0] for i in domains]
+    domains = list(set(domains) - set(known_domains))
+    for domain in domains:
+        print(f"Adding {domain} from {source}...")
+        add_domain(domain, source, True)
+
+
+
 if __name__ == '__main__':
-    process_source_lists()
-    migrate_lists()
+    try:
+        #print(f'google safe: {check_google_safebrowsing("04323ss.com", True)}')
+        print(f'google safe: {check_google_safebrowsing("twitter.com", True)}')
+    except Exception as e:
+        print(e)
+    # Process domains.
+    remove_stale_google_domains(True)
+    update_source_data()
+    update_db()
 
