@@ -34,11 +34,11 @@ class DomainRepository:
     async def list(self, limit: int = 10, offset: int = 0, all = 0) -> List[DomainRead]:
         if all == 1:
             statement = (
-                (select(Domain).where(1 == 1))
+                (select(Domain))
             )
         else:
             statement = (
-                (select(Domain).where(1 == 1))
+                (select(Domain))
                 .offset(offset)
                 .limit(limit)
             )
