@@ -20,7 +20,6 @@ router = APIRouter()
     name="add_domain",
 )
 async def add_domain(
-    
     domain_create: DomainAdd = Body(...),
     repository: DomainRepository = Depends(get_repository(DomainRepository)),
 ) -> DomainRead:
