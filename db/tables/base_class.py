@@ -5,6 +5,12 @@ from sqlalchemy import Enum, text
 from sqlmodel import Field, SQLModel
 
 
+class StatusEnum(str, Enum):
+    active = "active"
+    inactive = "inactive"
+    deleted = "deleted"
+
+# TODO: Use this, once confirming expected netwwork value (match to moralis)
 class NetworkEnum(str, Enum):
     avalanche = "Avalanche"
     bsc = "Bsc"

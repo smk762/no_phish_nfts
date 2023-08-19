@@ -5,7 +5,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from db.errors import EntityDoesNotExist
-from db.tables.base_class import NetworkEnum
+from db.tables.base_class import StatusEnum
 from db.tables.contracts import Contract
 from db.schemas.contracts import ContractCreate, ContractPatch, ContractRead
 
@@ -18,7 +18,7 @@ class ContractRepository:
         statement = (
             select(Contract)
             .where(Contract.id == contract_id)
-            .where(Contract.status != NetworkEnum.deleted)
+            .where(Contract.status != StatusEnum.deleted)
         )
         results = await self.session.exec(statement)
 
@@ -34,7 +34,7 @@ class ContractRepository:
 
     async def list(self, limit: int = 10, offset: int = 0) -> List[ContractRead]:
         statement = (
-            (select(Contract).where(Contract.status != NetworkEnum.deleted))
+            (select(Contract).where(Transaction.status != StatusEnum.deleted))
             .offset(offset)
             .limit(limit)
         )
@@ -74,7 +74,7 @@ class ContractRepository:
         if db_contract is None:
             raise EntityDoesNotExist
 
-        setattr(db_contract, "status", NetworkEnum.deleted)
+        setattr(db_contract, "status", StatusEnum.deleted)
         self.session.add(db_contract)
 
         await self.session.commit()
