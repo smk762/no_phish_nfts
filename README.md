@@ -62,6 +62,7 @@ sudo systemctl restart docker
 - Run `docker compose build` to build the containers
 - Run `docker compose up -d` to run the containers as a daemon
 - Run `docker compose logs -f --tail 33` to view runtime logs
+- Run `poetry run create_tables.py` to create the `domains` and `contracts` tables. Note: This will drop existing tables if re-run later.
 
 
 ## Crons
