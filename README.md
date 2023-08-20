@@ -69,3 +69,10 @@ sudo systemctl restart docker
 - Add block list sources to `sources.json`
 - Add custom entries in `lists/*/custom.json`
 - Setup a crontab entry like `0 0 * * * poetry run /home/user/no_phish_nfts/update_lists.py` to refresh the lists every 24 hours at midnight.
+
+## Sources
+- https://github.com/mitchellkrogza/Phishing.Database
+- https://github.com/MetaMask/eth-phishing-detect
+- https://developers.google.com/safe-browsing
+- https://www.alchemy.com/nft-api
+- https://www.mnemonichq.com/
