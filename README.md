@@ -22,7 +22,7 @@ This repo serves an API to check if a website domain or NFT contract address has
 
 
 ### Make Docker respect UFW
-
+---
 **Docker adds iptables rules that will override UFW rules!** 
 Make sure to run the steps below to secure the ports used by Docker. See this article for more info: https://www.techrepublic.com/article/how-to-fix-the-docker-and-ufw-security-flaw/
 
@@ -42,7 +42,7 @@ sudo systemctl restart docker
 ```
 
 ### Install API
-
+---
 - Clone repo `git clone https://github.com/smk762/no_phish_nfts`
 - Create network for project with `docker network create nft-net`
 - Copy `.env.example` to `.env` and populate with required environment variables
@@ -54,14 +54,14 @@ sudo systemctl restart docker
 
 
 ### Crons
-
+---
 - Add block list sources to `sources.json`
 - Add custom entries in `lists/*/custom.json`
 - Setup a crontab entry like `0 0 * * * poetry run /home/user/no_phish_nfts/update_lists.py` to refresh the lists every 24 hours at midnight.
 
 
 ### Stack
-
+---
 <p align="center" width="100%">
     <a href="https://www.postgresql.org/" alt="Contributors" style="margin:20px">
         <img src="doc/img/postgresql.png" height="100" />
@@ -74,8 +74,8 @@ sudo systemctl restart docker
     </a>
 </p>
 
-## Sources
-
+### Sources
+---
 <p align="center" width="100%">
     <a href="https://metamask.io/" alt="Metamask" style="margin:20px">
         <img src="doc/img/metamask.jpg" height="60" />
