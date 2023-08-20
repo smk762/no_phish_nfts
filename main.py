@@ -1,12 +1,9 @@
-from fastapi import FastAPI, status
+from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 
 from core.config import settings
 from api.router import router
 
-import logging
-
-from logger import logger
 
 app = FastAPI(
     title=settings.title,
