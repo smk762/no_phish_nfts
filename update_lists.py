@@ -71,6 +71,9 @@ def update_source_files(list_type, urls, cron=True):
         elif fn.endswith(".txt"):
             with open(f"{list_path}/{fn}", 'w') as f:
                 f.write(get_text_file(url))
+        elif fn.endswith(".yaml"):
+            with open(f"{list_path}/{fn}", 'w') as f:
+                f.write(get_text_file(url))
         elif fn.endswith(".json"):
             with open(f"{list_path}/{fn}", 'w') as f:
                 json.dump(get_json_file(url), f)
@@ -104,10 +107,22 @@ def update_db():
                     if list_type == "contracts":
                         if network in data:
                             add_contracts(file, network, data, known_contracts[network])
-                    elif list_type == "domains":                        
+                    elif list_type == "domains":
                         if "blacklist" in data:
                             data = data["blacklist"]
                         add_domains(data, file, known_domains)
+            elif file.endswith(".yaml"):
+                with open(f"{folder}/{file}") as f:
+                    data = set([i.strip() for i in f.readlines()])
+                    
+                if list_type == "contracts":
+                    data = parse_yaml(data)
+                    # Assuming source only covers ETH, awating confirmation
+                    network = "ethereum"
+                    add_contracts(file, network, data, known_contracts[network])
+                elif list_type == "domains":
+                    data = parse_yaml(data)
+                    add_domains(data, file, known_domains)
             elif file.endswith(".tar.gz"):
                 continue
             elif file.endswith(".zip"):
@@ -115,7 +130,11 @@ def update_db():
             else:
                 logger.warning(f"Skipping {file}, it is not a regoconised format...")
                 time.sleep(3)
-    
+
+
+def parse_yaml(rawdata):
+    return [i.split(" ")[-1].strip() for i in rawdata if i.find("url:") + i.find("mint:") > -1]
+
 
 def migrate_alchemy_spam_contracts(network, known_contracts):
     source = "alchemy"
@@ -130,6 +149,13 @@ def migrate_alchemy_spam_contracts(network, known_contracts):
         except Exception as e:
             logger.error(e)
             time.sleep(3)
+
+
+def migrate_phantom_spam_contracts():
+    pass
+
+def migrate_phantom_spam_domains():
+    pass
 
 
 def add_contracts(source, network, contracts, known_contracts):

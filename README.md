@@ -50,7 +50,7 @@ sudo systemctl restart docker
 - Use `docker compose build` to build the containers
 - Use `docker compose up -d` to run the containers as a daemon
 - Use `docker compose logs -f --tail 33` to view runtime logs
-- Use `poetry run create_tables.py` to create the `domains` and `contracts` tables. Note: This will drop existing tables if re-run later.
+- Use `poetry run ./create_tables.py` to create the `domains` and `contracts` tables. Note: This will drop existing tables if re-run later.
 
 
 ### Crons
@@ -91,5 +91,8 @@ sudo systemctl restart docker
     </a>
     <a href="https://github.com/mitchellkrogza/Phishing.Database" alt="Mitchellkrogza's Phishing Database" style="margin:20px">
         <img src="doc/img/phishing-logo.jpg" height="60" />
+    </a>
+    <a href="https://github.com/phantom/blocklist" alt="Phantom Blocklist" style="margin:20px">
+        <img src="doc/img/phantom.png" height="60" />
     </a>
 </p>

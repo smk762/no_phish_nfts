@@ -5,11 +5,15 @@
         ],
         "cron": [
             "https://raw.githubusercontent.com/mitchellkrogza/Phishing.Database/master/phishing-links-NEW-today.txt",
-            "https://raw.githubusercontent.com/MetaMask/eth-phishing-detect/c90af01e3d9a4d2a2167051a2e7e879b7a0a922d/src/config.json"
+            "https://raw.githubusercontent.com/MetaMask/eth-phishing-detect/c90af01e3d9a4d2a2167051a2e7e879b7a0a922d/src/config.json",
+            "https://raw.githubusercontent.com/phantom/blocklist/master/eth-blocklist.yaml",
+            "https://raw.githubusercontent.com/phantom/blocklist/master/blocklist.yaml"
         ]
     },
     "contracts": {
         "init": [],
-        "cron": []
+        "cron": [
+            "https://raw.githubusercontent.com/phantom/blocklist/master/nft-blocklist.yaml"
+        ]
     }
 }
