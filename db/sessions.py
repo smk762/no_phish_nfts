@@ -11,6 +11,7 @@ import os
 from core.config import settings
 from db.tables.domains import Domain
 from db.tables.contracts import Contract
+from third_party.google import check_google_safebrowsing
 from logger import logger
 
 engine = create_engine(
@@ -39,23 +40,31 @@ def add_contract(source, network, address, local=False):
     eng = engine
     if local:
         eng = local_engine
-        
     with Session(eng) as session:
-        session.add(contract)
-        session.commit()
+        try:
+            session.add(contract)
+            session.commit()
+        except sqlalchemy.exc.IntegrityError as e:
+            logger.warning(e)
+        except Exception as e:
+            logger.warning(e)
 
 
-def dump_contracts(network):
-    with Session(local_engine) as session:
+def dump_contracts(network, local=False):
+    eng = engine
+    if local:
+        eng = local_engine
+    with Session(eng) as session:
         r = session.execute((select(Contract.address)).where(Contract.network == network))
         return [i.address for i in r]
 
 
-def is_contract_bad(address: str) -> bool:
+def is_contract_bad(network: str, address: str) -> bool:
     with Session(engine) as session:
         sql = (
             select(Contract.address)
             .where(Contract.address == address)
+            .where(Contract.network == network)
             .limit(1)
         )
         return len([i.address for i in session.execute(sql)]) != 0
@@ -72,16 +81,54 @@ def add_domain(url, source="", local=False, cache=200000000):
     eng = engine
     if local:
         eng = local_engine
-        
+
     with Session(eng) as session:
-        session.add(domain)
-        session.commit()
+        try:
+            session.add(domain)
+            session.commit()
+        except sqlalchemy.exc.IntegrityError as e:
+            logger.warning(e)
+        except Exception as e:
+            logger.warning(e)
 
 
-def dump_domains():
-    with Session(local_engine) as session:
+def dump_domains(local=False):
+    eng = engine
+    if local:
+        eng = local_engine
+    with Session(eng) as session:
         r = session.execute((select(Domain.url)))
         return [i.url for i in r]
+
+
+
+def is_domain_bad(url: str, local: bool = False) -> bool:
+    url = url.replace("http://", "").replace("http://", "")
+    with Session(engine) as session:
+        sql = (
+            select(Domain)
+            .where(Domain.url == url)
+            .limit(1)
+        )
+        r = session.execute(sql)
+        data = [i for i in r]
+        logger.info(data)
+        logger.info(int(time.time()))
+        if len(data) == 0:
+            logger.warning(f"No entries for {url} in DB")
+            r = check_google_safebrowsing(url)
+            logger.debug(f"{url}: {r}")
+            if "matches" in r:
+                if "cacheDuration" in r["matches"][0]:
+                    cache = int(r["matches"][0]["cacheDuration"][:-1])
+                    remove_stale_google_domains(local)
+                    try:
+                        add_domain(url, "google", local, cache)
+                    except Exception as e:
+                        logger.error(e)
+                return True
+            return False
+        return True
 
 
 def remove_stale_google_domains(local=False):
@@ -93,72 +140,7 @@ def remove_stale_google_domains(local=False):
         sql = delete(Domain).where(Domain.updated + Domain.cache < int(time.time()))
         session.execute(sql)
         session.commit()
-
-
-# https://console.cloud.google.com/tos?id=safebrowsing
-def check_google_safebrowsing(url: str, local=False, update_db=True) -> bool:
-    baseurl = "https://safebrowsing.googleapis.com/v4/threatMatches:find"
-    logger.info(baseurl)
-    params = f"key={settings.google_api_key}"
-    headers = {"Content-Type": "application/json"}
-    body = {
-        "client": {
-            "clientId": "no_phish_nft",
-            "clientVersion": "0.0.1"
-        },
-        "threatInfo": {
-            "threatTypes": [
-                "MALWARE",
-                "SOCIAL_ENGINEERING",
-                "THREAT_TYPE_UNSPECIFIED",
-                "UNWANTED_SOFTWARE",
-                "POTENTIALLY_HARMFUL_APPLICATION"
-            ],
-            "platformTypes": ["ANY_PLATFORM"],
-            "threatEntryTypes": [
-                "URL",
-                "THREAT_ENTRY_TYPE_UNSPECIFIED",
-                "EXECUTABLE"
-            ],
-            "threatEntries": [
-                {"url": url}
-            ]
-        }
-    }
-    r = requests.post(f"{baseurl}?{params}", headers=headers, json=body).json()
-    # 04323ss.com: {'matches': [{'threatType': 'SOCIAL_ENGINEERING', 'platformType': 'ANY_PLATFORM', 'threat': {'url': '04323ss.com'},
-    # 'cacheDuration': '300s', 'threatEntryType': 'URL'}]}
-    logger.debug(r)
-    if "matches" in r:
-        if "cacheDuration" in r["matches"][0]:
-            
-            cache = int(r["matches"][0]["cacheDuration"][:-1])
-            if update_db:
-                remove_stale_google_domains(local)
-                try:
-                    add_domain(url, "google", local, cache)
-                except Exception as e:
-                    logger.error(e)
-                    
-        return True
-    return False
-
-
-def is_domain_bad(url: str) -> bool:
-    url = url.replace("http://", "").replace("http://", "")
-    with Session(engine) as session:
-        sql = (
-            select(Domain.url)
-            .where(Domain.updated + Domain.cache < int(time.time()))
-            .where(Domain.url == url)
-            .limit(1)
-        )
-        data = [i.url for i in session.execute(sql)]
-        logger.info(data)
-        if len(data) == 0:
-            logger.warning(f"No entries for {url} in DB")
-            return check_google_safebrowsing(url)
-        return True
+        logger.info("Stale google domains cache cleared")
 
 
 def create_tables():
