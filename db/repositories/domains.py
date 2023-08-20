@@ -6,7 +6,6 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from db.sessions import dump_domains
 
 from db.errors import EntityDoesNotExist
-from db.tables.base_class import StatusEnum
 from db.tables.domains import Domain
 from db.schemas.domains import DomainCreate, DomainPatch, DomainRead
 
@@ -19,7 +18,6 @@ class DomainRepository:
         statement = (
             select(Domain)
             .where(Domain.id == domain_id)
-            .where(Domain.status != StatusEnum.deleted)
         )
         results = await self.session.exec(statement)
         return results.first()
@@ -33,7 +31,7 @@ class DomainRepository:
 
     async def list(self, limit: int = 10, offset: int = 0, all = 0) -> List[DomainRead]:
         statement = (
-            (select(Domain).where(Transaction.status != StatusEnum.deleted))
+            (select(Domain))
             .offset(offset)
             .limit(limit)
         )
@@ -64,6 +62,5 @@ class DomainRepository:
         db_domain = await self._get_instance(domain_id)
         if db_domain is None:
             raise EntityDoesNotExist
-        setattr(db_domain, "status", StatusEnum.deleted)
-        self.session.add(db_domain)
+        self.session.delete(db_domain)
         await self.session.commit()
