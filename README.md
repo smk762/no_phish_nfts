@@ -4,7 +4,7 @@ This repo serves an API to check if a domain or contract address has been identi
 
 ## Endpoints
 
-
+![image](https://github.com/smk762/no_phish_nfts/assets/35845239/6e706cfa-e7d0-4903-a52e-a73247a07ed5)
 
 ## Stack
 
