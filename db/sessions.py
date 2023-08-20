@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
+import sqlalchemy
 from sqlalchemy import select, update, delete, values
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
