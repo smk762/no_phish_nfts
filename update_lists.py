@@ -9,13 +9,15 @@ import asyncio
 from os import listdir
 from os.path import isfile, join, basename, exists, realpath, dirname
 from db.sessions import add_domain, dump_domains, add_contract, \
-    dump_contracts, check_google_safebrowsing, remove_stale_google_domains
+    dump_contracts, remove_stale_google_domains
 from typing import Optional, List
 from fastapi import Depends
+from db.tables.base_class import NetworkEnum
 from api.dependencies.repositories import get_repository
 from db.repositories.domains import DomainRepository
 from db.schemas.domains import DomainAdd, DomainRead
 from core.config import settings
+from third_party.alchemy import check_alchemy
 from logger import logger
 
 
@@ -76,13 +78,13 @@ def update_source_files(list_type, urls, cron=True):
 
 
 def update_db():
-    known_domains = dump_domains()
+    known_domains = dump_domains(True)
     known_contracts = {}
-    for network in ["Polygon", "Eth", "Bsc", "Avalanche", "Fantom"]:
-        known_contracts[network] = dump_contracts(network)
+    for network in [i.value for i in NetworkEnum]:
+        known_contracts[network] = dump_contracts(network, True)
         migrate_alchemy_spam_contracts(network, known_contracts[network])
         # Doing again to include the contracs added from alchemy
-        known_contracts[network] = dump_contracts(network)
+        known_contracts[network] = dump_contracts(network, True)
     for list_type in ["contracts", "domains"]:
         folder = f"{script_path}/lists/{list_type}"
         files = files_in_folder(folder)
@@ -113,25 +115,11 @@ def update_db():
             else:
                 logger.warning(f"Skipping {file}, it is not a regoconised format...")
                 time.sleep(3)
-
+    
 
 def migrate_alchemy_spam_contracts(network, known_contracts):
     source = "alchemy"
-    api_key = settings.alchemy_api_key
-    if network == "Polygon":
-        url = f"https://polygon-mainnet.g.alchemy.com/nft/v2/{api_key}/getSpamContracts"
-    elif network == "Eth":
-        url = f"https://eth-mainnet.g.alchemy.com/nft/v2/{api_key}/getSpamContracts"
-    else:
-        return
-        # Other networks not yet supported
-        '''
-        elif network == "Arb":
-            url = f"https://arb-mainnet.g.alchemy.com/nft/v2/{api_key}/getSpamContracts"
-        elif network == "Opt":
-            url = f"https://opt-mainnet.g.alchemy.com/nft/v2/{api_key}/getSpamContracts"
-        '''
-    data = requests.get(url).json()
+    data = check_alchemy(network)
     addresses = list(set(data) - set(known_contracts))
     logger.info(f"{len(addresses)} contract addresses to process for {network} from {source}...")
     logger.info(f"{len(known_contracts)} known_contracts for {network} from {source}...")
@@ -165,10 +153,6 @@ def add_domains(domains, source, known_domains):
 
 
 if __name__ == '__main__':
-    # TODO: Move to tests
-    logger.info(f'Is 04323ss.com google safe?: {check_google_safebrowsing("04323ss.com", True, False)}')
-    logger.info(f'Is twitter.com google safe?: {check_google_safebrowsing("twitter.com", True, False)}')
-    # Process domains.
     remove_stale_google_domains(True)
     update_source_data()
     update_db()
