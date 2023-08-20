@@ -17,8 +17,6 @@ class NetworkEnum(str, Enum):
         return str.__str__(self)
 
 
-
-
 class UUIDModel(SQLModel):
     id: UUID = Field(
         default_factory=uuid4,

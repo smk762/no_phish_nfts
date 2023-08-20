@@ -14,6 +14,10 @@ class GlobalConfig(BaseConfig):
     redoc_url: str = "/redoc"
     openapi_url: str = "/openapi.json"
     api_prefix: str = "/api/blocklist"
+    valid_api_keys: dict = {
+        "view": [i for i in os.environ.get("VIEW_API_KEYS").split(" ")],
+        "edit": [i for i in os.environ.get("EDIT_API_KEYS").split(" ")]
+    }
     fastapi_port: os.environ.get("DEBUG")
     debug: bool = os.environ.get("DEBUG")
     postgres_user: str = os.environ.get("POSTGRES_USER")

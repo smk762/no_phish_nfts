@@ -10,6 +10,7 @@ from db.schemas.contracts import ContractAdd, ContractPatch, ContractRead
 from db.sessions import is_contract_bad
 from db.tables.base_class import NetworkEnum
 from third_party.mnemonichq import spam_scan
+from auth import edit_api_key_auth
 
 router = APIRouter()
 
@@ -67,15 +68,14 @@ async def check_contract(
     response_model=ContractRead,
     status_code=status.HTTP_201_CREATED,
     name="add_contract",
-    summary="Adds a contract to the local DB. Requires auth."
+    summary="Adds a contract to the local DB. Requires auth.",
+    dependencies=[Depends(edit_api_key_auth)]
 )
 async def add_contract(
     contract_create: ContractAdd = Body(...),
     repository: ContractRepository = Depends(get_repository(ContractRepository)),
 ) -> ContractRead:
-    # TODO: Add some simple auth in here to block spam
-    return {"error": "not implemented yet"}
-    # return await repository.create(contract_create=contract_create)
+    return await repository.create(contract_create=contract_create)
 
 
 @router.put(
@@ -83,44 +83,40 @@ async def add_contract(
     response_model=ContractRead,
     status_code=status.HTTP_200_OK,
     name="update_contract",
-    summary="Updates a contract in the local DB. Requires auth."
+    summary="Updates a contract in the local DB. Requires auth.",
+    dependencies=[Depends(edit_api_key_auth)]
 )
 async def update_contract(
-    network: NetworkEnum,
-    address: str,
     contract_patch: ContractPatch = Body(...),
     repository: ContractRepository = Depends(get_repository(ContractRepository)),
 ) -> ContractRead:
-    return {"error": "not implemented yet"}
-    #try:
-    #    await repository.get(network=network, address=address)
-    #except EntityDoesNotExist:
-    #    raise HTTPException(
-    #        status_code=status.HTTP_404_NOT_FOUND, detail=f"{network} contract '{address}' not found!"
-    #    )
-    #return await repository.patch(
-    #    network=network, address=address, contract_patch=contract_patch
-    #)
+    try:
+        await repository.get(address=contract_patch.address)
+    except EntityDoesNotExist:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"{contract_patch.network} contract '{contract_patch.address}' not found!"
+        )
+    return await repository.patch(contract_patch=contract_patch)
 
 
 @router.delete(
     "/contract/{network}/{address}",
     status_code=status.HTTP_204_NO_CONTENT,
     name="delete_contract",
-    summary="Deletes a contract from the local DB. Requires auth."
+    summary="Deletes a contract from the local DB. Requires auth.",
+    dependencies=[Depends(edit_api_key_auth)]
 )
 async def delete_contract(
     network: NetworkEnum,
     address: str,
     repository: ContractRepository = Depends(get_repository(ContractRepository)),
 ) -> None:
-    # TODO: Add some simple auth in here to block spam
-    return {"error": "not implemented yet"}
-    #try:
-    #    await repository.get(network=network, address=address)
-    #except EntityDoesNotExist:
-    #    raise HTTPException(
-    #        status_code=status.HTTP_404_NOT_FOUND, detail=f"{network} contract '{address}' not found!"
-    #    )
-    #return await repository.delete(network=network, address=address)
+    try:
+        await repository.get(network=network, address=address)
+    except EntityDoesNotExist:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"{network} contract '{address}' not found!"
+        )
+    return await repository.delete(network=network, address=address)
 
