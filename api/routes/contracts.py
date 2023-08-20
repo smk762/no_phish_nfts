@@ -64,7 +64,7 @@ async def check_contract(
 
 
 @router.post(
-    "/contract/{network}/{address}",
+    "/contract/create",
     response_model=ContractRead,
     status_code=status.HTTP_201_CREATED,
     name="add_contract",
@@ -79,7 +79,7 @@ async def add_contract(
 
 
 @router.put(
-    "/contract/{network}/{address}",
+    "/contract/update",
     response_model=ContractRead,
     status_code=status.HTTP_200_OK,
     name="update_contract",
@@ -101,7 +101,7 @@ async def update_contract(
 
 
 @router.delete(
-    "/contract/{network}/{address}",
+    "/contract/delete",
     status_code=status.HTTP_204_NO_CONTENT,
     name="delete_contract",
     summary="Deletes a contract from the local DB. Requires auth.",
@@ -119,4 +119,3 @@ async def delete_contract(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"{network} contract '{address}' not found!"
         )
     return await repository.delete(network=network, address=address)
-
