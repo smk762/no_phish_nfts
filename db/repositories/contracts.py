@@ -1,6 +1,4 @@
 from typing import Optional, List
-from uuid import UUID
-import time
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -25,7 +23,6 @@ class ContractRepository:
                 .where(Contract.address == address)
                 .where(Contract.network == network)
             )
-            
         results = await self.session.exec(statement)
         return results.first()
 
@@ -62,19 +59,14 @@ class ContractRepository:
         contract_data = contract_patch.dict(exclude_unset=True, exclude={"id"})
         for key, value in contract_data.items():
             setattr(db_contract, key, value)
-
         self.session.add(db_contract)
         await self.session.commit()
         await self.session.refresh(db_contract)
-
         return ContractRead(**db_contract.dict())
 
     async def delete(self, address: str, network: str) -> None:
         db_contract = await self._get_instance(address, network)
-
         if db_contract is None:
             raise EntityDoesNotExist
-
         await self.session.delete(db_contract)
-
         await self.session.commit()
