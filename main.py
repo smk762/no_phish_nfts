@@ -3,7 +3,6 @@ from fastapi.openapi.utils import get_openapi
 
 from core.config import settings
 from api.router import router
-from db.sessions import create_tables
 
 import logging
 
@@ -14,7 +13,9 @@ app = FastAPI(
     version=settings.version,
     description=settings.description,
     docs_url=settings.docs_url,
-    openapi_url=settings.openapi_url
+    openapi_url=settings.openapi_url,
+    openapi_tags=settings.tags_metadata,
+    swagger_ui_parameters={"defaultModelsExpandDepth": -1}
 )
 
 app.include_router(router, prefix=settings.api_prefix)
@@ -39,18 +40,3 @@ def custom_openapi():
 
 
 app.openapi = custom_openapi
-
-
-@app.get("/")
-async def root():
-    return {"result": "View documentation at /docs"}
-
-
-@app.get(
-    "/init_tables",
-    status_code=status.HTTP_200_OK,
-    name="init_tables"
-)
-async def init_tables():
-    create_tables()
-
