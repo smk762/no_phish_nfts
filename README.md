@@ -40,7 +40,6 @@ Restart docker
 ```
 sudo systemctl restart docker
 ```
----
 
 ### Install API
 
@@ -54,14 +53,14 @@ sudo systemctl restart docker
 - Use `poetry run create_tables.py` to create the `domains` and `contracts` tables. Note: This will drop existing tables if re-run later.
 
 
-## Crons
+### Crons
 
 - Add block list sources to `sources.json`
 - Add custom entries in `lists/*/custom.json`
 - Setup a crontab entry like `0 0 * * * poetry run /home/user/no_phish_nfts/update_lists.py` to refresh the lists every 24 hours at midnight.
 
 
-## Stack
+### Stack
 
 <p align="center" width="100%">
     <a href="https://www.postgresql.org/" alt="Contributors" style="margin:20px">
