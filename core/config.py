@@ -13,7 +13,7 @@ class GlobalConfig(BaseConfig):
     docs_url: str = "/docs"
     redoc_url: str = "/redoc"
     openapi_url: str = "/openapi.json"
-    api_prefix: str = "/api"
+    api_prefix: str = "/api/blocklist"
     fastapi_port: os.environ.get("DEBUG")
     debug: bool = os.environ.get("DEBUG")
     postgres_user: str = os.environ.get("POSTGRES_USER")
@@ -25,6 +25,18 @@ class GlobalConfig(BaseConfig):
     db_echo_log: bool = True if os.environ.get("DEBUG") == "True" else False
     alchemy_api_key: str = os.environ.get("ALCHEMY_API_KEY")
     google_api_key: str = os.environ.get("GOOGLE_API_KEY")
+    mnemonichq_api_key: str = os.environ.get("MNEMONICHQ_API_KEY")
+    tags_metadata: dict = [
+        {
+            "name": "Domains",
+            "description": "Operations with users. The **login** logic is also here.",
+        },
+        {
+            "name": "Contracts",
+            "description": "Manage items. So _fancy_ they have their own docs."
+        }
+    ]
+
 
     @property
     def sync_database_url(self) -> str:
