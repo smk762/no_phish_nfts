@@ -8,10 +8,9 @@ from db.errors import EntityDoesNotExist
 from db.repositories.domains import DomainRepository
 from db.schemas.domains import DomainAdd, DomainPatch, DomainRead
 from db.sessions import is_domain_bad
-
+from auth import edit_api_key_auth
 
 router = APIRouter()
-
 
 
 @router.get(
@@ -44,62 +43,59 @@ async def check_domain(
 
 
 @router.post(
-    "/domain/{source}/{domain}",
+    "/domain/create",
     response_model=DomainRead,
     status_code=status.HTTP_201_CREATED,
     name="add_domain",
-    summary="Adds a domain to the local DB. Requires auth."
+    summary="Adds a domain to the local DB. Requires auth.",
+    dependencies=[Depends(edit_api_key_auth)]
 )
 async def add_domain(
     domain_create: DomainAdd = Body(...),
     repository: DomainRepository = Depends(get_repository(DomainRepository)),
 ) -> DomainRead:
-    # TODO: Add some simple auth in here to block spam
-    return {"error": "not implemented yet"}    
-    #return await repository.create(domain_create=domain_create)
+    return await repository.create(domain_create=domain_create)
 
 
 @router.put(
-    "/domain/{domain}",
+    "/domain/update",
     response_model=DomainRead,
     status_code=status.HTTP_200_OK,
     name="update_domain",
-    summary="Updates a domain in the local DB. Requires auth."
+    summary="Updates a domain in the local DB. Requires auth.",
+    dependencies=[Depends(edit_api_key_auth)]
 )
 async def update_domain(
-    domain: str,
     domain_patch: DomainPatch = Body(...),
     repository: DomainRepository = Depends(get_repository(DomainRepository)),
 ) -> DomainRead:
-    return {"error": "not implemented yet"}
-    #try:
-    #    await repository.get(domain=domain)
-    #except EntityDoesNotExist:
-    #    raise HTTPException(
-    #        status_code=status.HTTP_404_NOT_FOUND, detail=f"Domain '{domain}' not found!"
-    #    )
-
-    #return await repository.patch(
-    #    domain=domain, domain_patch=domain_patch
-    #)
+    try:
+        await repository.get(url=domain_patch.url)
+    except EntityDoesNotExist:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Domain '{domain_patch.url}' not found!"
+        )
+    return await repository.patch(
+        url=domain_patch.url,
+        domain_patch=domain_patch
+    )
 
 
 @router.delete(
-    "/domain/{domain}",
+    "/domain/delete",
     status_code=status.HTTP_204_NO_CONTENT,
     name="delete_domain",
-    summary="Deletes a contract from the local DB. Requires auth."
+    summary="Deletes a contract from the local DB. Requires auth.",
+    dependencies=[Depends(edit_api_key_auth)]
 )
 async def delete_domain(
-    domain: str,
+    url: str,
     repository: DomainRepository = Depends(get_repository(DomainRepository)),
 ) -> None:
-    # TODO: Add some simple auth in here to block spam
-    return "not implemented yet"
-    #try:
-    #    await repository.get(domain=domain)
-    #except EntityDoesNotExist:
-    #    raise HTTPException(
-    #        status_code=status.HTTP_404_NOT_FOUND, detail=f"Domain '{domain}' not found!"
-    #    )
-    #return await repository.delete(domain=domain)
+    try:
+        await repository.get(url=url)
+    except EntityDoesNotExist:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Domain '{url}' not found!"
+        )
+    return await repository.delete(url=url)

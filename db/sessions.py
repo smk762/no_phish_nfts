@@ -74,7 +74,6 @@ def add_domain(url, source="", local=False, cache=200000000):
     domain = Domain(
         url=url,
         source=source,
-        updated=int(time.time()),
         local=local,
         cache=cache
     )
@@ -112,8 +111,6 @@ def is_domain_bad(url: str, local: bool = False) -> bool:
         )
         r = session.execute(sql)
         data = [i for i in r]
-        logger.info(data)
-        logger.info(int(time.time()))
         if len(data) == 0:
             logger.warning(f"No entries for {url} in DB")
             r = check_google_safebrowsing(url)
@@ -135,7 +132,6 @@ def remove_stale_google_domains(local=False):
     eng = engine
     if local:
         eng = local_engine
-        
     with Session(eng) as session:
         sql = delete(Domain).where(Domain.updated + Domain.cache < int(time.time()))
         session.execute(sql)
@@ -143,6 +139,9 @@ def remove_stale_google_domains(local=False):
         logger.info("Stale google domains cache cleared")
 
 
-def create_tables():
-    SQLModel.metadata.drop_all(engine)
-    SQLModel.metadata.create_all(engine)
+def create_tables(local=False):
+    eng = engine
+    if local:
+        eng = local_engine
+    SQLModel.metadata.drop_all(eng)
+    SQLModel.metadata.create_all(eng)
