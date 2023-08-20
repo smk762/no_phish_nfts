@@ -1,8 +1,8 @@
 {
-    "Eth": [
+    "eth": [
 
     ],
-    "Polygon": [
+    "polygon": [
         "0xdf4b5ba6b8d03baee9bcba6493c588cd718798ad",
         "0x92518894c2416499d1f6841d8f0efd74b9a9be67",
         "0x12ba688d3d3327415a94b914cc006883ca70dde4",
@@ -12,13 +12,13 @@
         "0x30eae30709130e42ad085f1f18a0392dbe80007a",
         "0x4d2d94b07b9d8ac2964aa27726ff20e8a67e780a"
     ],
-    "Bsc": [
+    "bsc": [
 
     ],
-    "Avalanche": [
+    "avalanche": [
 
     ],
-    "Fantom": [
+    "fantom": [
 
     ]
 }
