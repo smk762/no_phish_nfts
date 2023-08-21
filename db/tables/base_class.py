@@ -5,18 +5,6 @@ from sqlalchemy import text
 from sqlmodel import Field, SQLModel
 
 
-class NetworkEnum(str, Enum):
-    # If adding more, match to Moralis API chains
-    avalanche = "avalanche"
-    bsc = "bsc"
-    eth = "ethereum"
-    fantom = "fantom"
-    polygon = "polygon"
-    
-    def __str__(self) -> str:
-        return str.__str__(self)
-
-
 class UUIDModel(SQLModel):
     id: UUID = Field(
         default_factory=uuid4,
