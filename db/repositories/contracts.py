@@ -3,6 +3,7 @@ from typing import Optional, List
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from enums import NetworkEnum
 from db.errors import EntityDoesNotExist
 from db.tables.contracts import Contract
 from db.schemas.contracts import ContractCreate, ContractPatch, ContractRead
@@ -21,7 +22,7 @@ class ContractRepository:
             statement = (
                 select(Contract)
                 .where(Contract.address == address)
-                .where(Contract.network == network)
+                .where(Contract.network == NetworkEnum[network])
             )
         results = await self.session.exec(statement)
         return results.first()
@@ -36,7 +37,7 @@ class ContractRepository:
     async def list(self, network, limit: int = 10, offset: int = 0) -> List[ContractRead]:
         statement = (
             select(Contract)
-            .where(Contract.network == network)
+            .where(Contract.network == NetworkEnum[network])
             .offset(offset)
             .limit(limit)
             .order_by(Contract.updated.desc())

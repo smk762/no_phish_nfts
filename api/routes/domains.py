@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 @router.get(
-    "/domain/domain_list",
+    "/list",
     response_model=List[Optional[DomainRead]],
     status_code=status.HTTP_200_OK,
     name="get_domain_list",
@@ -29,7 +29,7 @@ async def get_domain_list(
 
 
 @router.get(
-    "/domain/{domain}",
+    "/scan/{domain}",
     response_model=bool,
     status_code=status.HTTP_200_OK,
     name="check_domain",
@@ -43,7 +43,7 @@ async def check_domain(
 
 
 @router.post(
-    "/domain/create",
+    "/create",
     response_model=DomainRead,
     status_code=status.HTTP_201_CREATED,
     name="add_domain",
@@ -58,7 +58,7 @@ async def add_domain(
 
 
 @router.put(
-    "/domain/update",
+    "/update",
     response_model=DomainRead,
     status_code=status.HTTP_200_OK,
     name="update_domain",
@@ -82,7 +82,7 @@ async def update_domain(
 
 
 @router.delete(
-    "/domain/delete",
+    "/delete",
     status_code=status.HTTP_204_NO_CONTENT,
     name="delete_domain",
     summary="Deletes a contract from the local DB. Requires auth.",

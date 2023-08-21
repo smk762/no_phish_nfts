@@ -8,34 +8,18 @@ from db.errors import EntityDoesNotExist
 from db.repositories.contracts import ContractRepository
 from db.schemas.contracts import ContractAdd, ContractPatch, ContractRead
 from db.sessions import is_contract_bad
-from db.tables.base_class import NetworkEnum
-from third_party.mnemonichq import spam_scan
+from enums import NetworkEnum
 from auth import edit_api_key_auth
 
 router = APIRouter()
 
 
 @router.get(
-    "/contract/scan_for_spam/{network}/{adddress}",
-    status_code=status.HTTP_200_OK,
-    name="scan_for_spam",
-    tags=["Contracts"],
-    summary="Scans an address for spam on MnemonicHQ",
-    description="If spam is detected, it will be added to the local DB.",
-)
-async def scan_for_spam(
-    network: NetworkEnum,
-    address: str    
-):
-    return spam_scan(network, address)
-
-
-@router.get(
-    "/contract/{network}/contract_list",
+    "/{network}/list",
     response_model=List[Optional[ContractRead]],
     status_code=status.HTTP_200_OK,
     name="get_contract_list",
-    summary="Returns a list of contracts tagged as spam."
+    summary="Returns a list of contract addresses tagged as spam."
 )
 async def get_contract_list(
     network: NetworkEnum,
@@ -43,32 +27,32 @@ async def get_contract_list(
     offset: int = Query(default=0),
     repository: ContractRepository = Depends(get_repository(ContractRepository)),
 ) -> List[Optional[ContractRead]]:
-    return await repository.list(limit=limit, offset=offset, network=network)
+    return await repository.list(limit=limit, offset=offset, network=NetworkEnum[network])
 
 
 @router.get(
-    "/contract/{network}/{address}",
+    "/scan/{network}/{contract_address}",
     response_model=dict,
     status_code=status.HTTP_200_OK,
     name="check_contract",
-    summary="Checks if a contract is tagged as spam."
+    summary="Checks if a contract address is tagged as spam."
 )
 async def check_contract(
     network: NetworkEnum,
-    address: str,
+    contract_address: str,
     repository: ContractRepository = Depends(get_repository(ContractRepository)),
 ) -> dict:
     return {
-        "result": is_contract_bad(network, address)
+        "result": is_contract_bad(network, contract_address)
     }
 
 
 @router.post(
-    "/contract/create",
+    "/create",
     response_model=ContractRead,
     status_code=status.HTTP_201_CREATED,
     name="add_contract",
-    summary="Adds a contract to the local DB. Requires auth.",
+    summary="Adds a contract address to the local DB. Requires auth.",
     dependencies=[Depends(edit_api_key_auth)]
 )
 async def add_contract(
@@ -79,11 +63,11 @@ async def add_contract(
 
 
 @router.put(
-    "/contract/update",
+    "/update",
     response_model=ContractRead,
     status_code=status.HTTP_200_OK,
     name="update_contract",
-    summary="Updates a contract in the local DB. Requires auth.",
+    summary="Updates a contract address in the local DB. Requires auth.",
     dependencies=[Depends(edit_api_key_auth)]
 )
 async def update_contract(
@@ -101,10 +85,10 @@ async def update_contract(
 
 
 @router.delete(
-    "/contract/delete",
+    "/delete",
     status_code=status.HTTP_204_NO_CONTENT,
     name="delete_contract",
-    summary="Deletes a contract from the local DB. Requires auth.",
+    summary="Deletes a contract address from the local DB. Requires auth.",
     dependencies=[Depends(edit_api_key_auth)]
 )
 async def delete_contract(
@@ -113,9 +97,9 @@ async def delete_contract(
     repository: ContractRepository = Depends(get_repository(ContractRepository)),
 ) -> None:
     try:
-        await repository.get(network=network, address=address)
+        await repository.get(network=NetworkEnum[network], address=address)
     except EntityDoesNotExist:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"{network} contract '{address}' not found!"
         )
-    return await repository.delete(network=network, address=address)
+    return await repository.delete(network=NetworkEnum[network], address=address)

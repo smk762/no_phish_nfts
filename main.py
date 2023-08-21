@@ -1,6 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, status
 from fastapi.openapi.utils import get_openapi
-
 from core.config import settings
 from api.router import router
 
