@@ -118,7 +118,7 @@ def update_db():
                 if list_type == "contracts":
                     data = parse_yaml(data)
                     # Assuming source only covers ETH, awating confirmation
-                    network = "ethereum"
+                    network = "solana"
                     add_contracts(file, network, data, known_contracts[network])
                 elif list_type == "domains":
                     data = parse_yaml(data)
