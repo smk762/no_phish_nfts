@@ -12,7 +12,7 @@ from db.sessions import add_domain, dump_domains, add_contract, \
     dump_contracts, remove_stale_google_domains
 from typing import Optional, List
 from fastapi import Depends
-from db.tables.base_class import NetworkEnum
+from enums import NetworkEnum, AlchemyNetworkEnum
 from api.dependencies.repositories import get_repository
 from db.repositories.domains import DomainRepository
 from db.schemas.domains import DomainAdd, DomainRead
@@ -83,53 +83,62 @@ def update_source_files(list_type, urls, cron=True):
 def update_db():
     known_domains = dump_domains(True)
     known_contracts = {}
-    for network in [i.value for i in NetworkEnum]:
+    for network in [i.name for i in NetworkEnum]:
+        try:
+            migrate_alchemy_spam_contracts(AlchemyNetworkEnum[network], known_contracts[network])
+        except KeyError as e:
+            pass
         known_contracts[network] = dump_contracts(network, True)
-        migrate_alchemy_spam_contracts(network, known_contracts[network])
-        # Doing again to include the contracs added from alchemy
-        known_contracts[network] = dump_contracts(network, True)
-    for list_type in ["contracts", "domains"]:
-        folder = f"{script_path}/lists/{list_type}"
-        files = files_in_folder(folder)
-        for file in files:
-            if file.endswith(".txt"):
-                with open(f"{folder}/{file}") as f:
-                    data = set([i.strip() for i in f.readlines()])
+        for list_type in ["contracts", "domains"]:
+            folder = f"{script_path}/lists/{list_type}"
+            files = files_in_folder(folder)
+            for file in files:
+                logger.debug(f"Processing {file}")
+
+                if file.endswith(".txt"):
+                    with open(f"{folder}/{file}") as f:
+                        data = set([i.strip() for i in f.readlines()])
+                        if list_type == "contracts":
+                            # TODO: Currently there is no txt file source for contracts
+                            # When there is, we'll need to define network here
+                            add_contracts(file, "unknown", data, known_contracts[network])
+                        elif list_type == "domains":
+                            add_domains(data, file, known_domains)
+
+                elif file.endswith(".json"):
+                    with open(f"{folder}/{file}") as f:
+                        data = json.load(f)
+                        if list_type == "contracts":
+                            if network in data:
+                                print(data[network])
+                                add_contracts(file, network, data[network], known_contracts[network])
+                        elif list_type == "domains":
+                            if "blacklist" in data:
+                                data = data["blacklist"]
+                            add_domains(data, file, known_domains)
+
+                elif file.endswith(".yaml"):
+                    with open(f"{folder}/{file}") as f:
+                        data = set([i.strip() for i in f.readlines()])
+
                     if list_type == "contracts":
-                        # TODO: Currently there is no txt file source for contracts
-                        # When there is, we'll need to define network here
-                        add_contracts(file, "unknown", data, known_contracts[network])
-                    elif list_type == "domains":
-                        add_domains(data, file, known_domains)
-            elif file.endswith(".json"):
-                with open(f"{folder}/{file}") as f:
-                    data = json.load(f)
-                    if list_type == "contracts":
-                        if network in data:
+                        data = parse_yaml(data)
+                        # Assuming source only covers ETH, awating confirmation
+                        if network == "solana":
                             add_contracts(file, network, data, known_contracts[network])
                     elif list_type == "domains":
-                        if "blacklist" in data:
-                            data = data["blacklist"]
+                        data = parse_yaml(data)
                         add_domains(data, file, known_domains)
-            elif file.endswith(".yaml"):
-                with open(f"{folder}/{file}") as f:
-                    data = set([i.strip() for i in f.readlines()])
-                    
-                if list_type == "contracts":
-                    data = parse_yaml(data)
-                    # Assuming source only covers ETH, awating confirmation
-                    network = "solana"
-                    add_contracts(file, network, data, known_contracts[network])
-                elif list_type == "domains":
-                    data = parse_yaml(data)
-                    add_domains(data, file, known_domains)
-            elif file.endswith(".tar.gz"):
-                continue
-            elif file.endswith(".zip"):
-                continue                
-            else:
-                logger.warning(f"Skipping {file}, it is not a regoconised format...")
-                time.sleep(3)
+
+                elif file.endswith(".tar.gz"):
+                    continue
+
+                elif file.endswith(".zip"):
+                    continue
+
+                else:
+                    logger.warning(f"Skipping {file}, it is not a regoconised format...")
+                    time.sleep(3)
 
 
 def parse_yaml(rawdata):
@@ -151,14 +160,10 @@ def migrate_alchemy_spam_contracts(network, known_contracts):
             time.sleep(3)
 
 
-def migrate_phantom_spam_contracts():
-    pass
-
-def migrate_phantom_spam_domains():
-    pass
-
-
 def add_contracts(source, network, contracts, known_contracts):
+    print(network)
+    if known_contracts:
+        logger.info(f"{len(known_contracts)} contracts in the blocklist")
     contracts = list(set(contracts) - set(known_contracts))
     for address in contracts:
         add_contract(source, network, address, True)
