@@ -32,12 +32,16 @@ class GlobalConfig(BaseConfig):
     mnemonichq_api_key: str = os.environ.get("MNEMONICHQ_API_KEY")
     tags_metadata: dict = [
         {
-            "name": "Domains",
-            "description": "Operations with users. The **login** logic is also here.",
+            "name": "Addresses",
+            "description": "Information about an NFT address. ETH / Polygon only."
         },
         {
             "name": "Contracts",
-            "description": "Manage items. So _fancy_ they have their own docs."
+            "description": "Information about NFT contracts marked as spam or malicious."
+        },
+        {
+            "name": "Domains",
+            "description": "Information about domains marked as malicious. Input should exclude `http://` and `https://`",
         }
     ]
 
