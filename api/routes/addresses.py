@@ -10,7 +10,7 @@ router = APIRouter()
     name="scan_for_spam",
     tags=["Addresses"],
     summary="Scans an address for spam on MnemonicHQ. Eth and Matic only.",
-    description="If spam is detected, it will be added to the local DB.",
+    description="If spam is detected, it will be added to the local DB. Use '0x3eb4b12127EdC81A4d2fD49658db07005bcAd065' as an example on ETH address to return a positive result.",
 )
 async def scan_for_spam(
     network: MnemonicHqNetworkEnum,

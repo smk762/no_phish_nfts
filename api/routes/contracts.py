@@ -19,7 +19,7 @@ router = APIRouter()
     response_model=List[Optional[ContractRead]],
     status_code=status.HTTP_200_OK,
     name="get_contract_list",
-    summary="Returns a list of contracts tagged as spam."
+    summary="Returns a list of contract addresses tagged as spam."
 )
 async def get_contract_list(
     network: NetworkEnum,
@@ -31,19 +31,19 @@ async def get_contract_list(
 
 
 @router.get(
-    "/scan/{network}/{address}",
+    "/scan/{network}/{contract_address}",
     response_model=dict,
     status_code=status.HTTP_200_OK,
     name="check_contract",
-    summary="Checks if a contract is tagged as spam."
+    summary="Checks if a contract address is tagged as spam."
 )
 async def check_contract(
     network: NetworkEnum,
-    address: str,
+    contract_address: str,
     repository: ContractRepository = Depends(get_repository(ContractRepository)),
 ) -> dict:
     return {
-        "result": is_contract_bad(network, address)
+        "result": is_contract_bad(network, contract_address)
     }
 
 
@@ -52,7 +52,7 @@ async def check_contract(
     response_model=ContractRead,
     status_code=status.HTTP_201_CREATED,
     name="add_contract",
-    summary="Adds a contract to the local DB. Requires auth.",
+    summary="Adds a contract address to the local DB. Requires auth.",
     dependencies=[Depends(edit_api_key_auth)]
 )
 async def add_contract(
@@ -67,7 +67,7 @@ async def add_contract(
     response_model=ContractRead,
     status_code=status.HTTP_200_OK,
     name="update_contract",
-    summary="Updates a contract in the local DB. Requires auth.",
+    summary="Updates a contract address in the local DB. Requires auth.",
     dependencies=[Depends(edit_api_key_auth)]
 )
 async def update_contract(
@@ -88,7 +88,7 @@ async def update_contract(
     "/delete",
     status_code=status.HTTP_204_NO_CONTENT,
     name="delete_contract",
-    summary="Deletes a contract from the local DB. Requires auth.",
+    summary="Deletes a contract address from the local DB. Requires auth.",
     dependencies=[Depends(edit_api_key_auth)]
 )
 async def delete_contract(
