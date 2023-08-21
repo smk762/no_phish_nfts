@@ -2,14 +2,14 @@
 import requests
 from core.config import settings
 from logger import logger
+from enums import AlchemyNetworkEnum
+from logger import logger
 
 def check_alchemy(network):
     api_key = settings.alchemy_api_key
-    if network == "polygon":
-        url = f"https://polygon-mainnet.g.alchemy.com/nft/v2/{api_key}/getSpamContracts"
-    elif network == "eth":
-        url = f"https://eth-mainnet.g.alchemy.com/nft/v2/{api_key}/getSpamContracts"
-    else:
-        return []
-        # Other networks not yet supported
-    return requests.get(url).json()
+    try:
+        url = f"https://{AlchemyNetworkEnum[network]}-mainnet.g.alchemy.com/nft/v2/{api_key}/getSpamContracts"
+        return requests.get(url).json()
+    except KeyError as e:
+        logger.warning(f"{network} not supported by Alchemy")
+        return {}
