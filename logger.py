@@ -47,7 +47,7 @@ class CustomFormatter(logging.Formatter):
 
 # create logger with project folder name
 logging.basicConfig()
-logger = logging.getLogger('custom')
+logger = logging.getLogger('no_phish_nft')
 logger.setLevel(logging.DEBUG)
 logger.propagate = False
 
