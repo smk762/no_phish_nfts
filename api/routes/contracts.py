@@ -93,13 +93,13 @@ async def update_contract(
 )
 async def delete_contract(
     network: NetworkEnum,
-    address: str,
+    contract_address: str,
     repository: ContractRepository = Depends(get_repository(ContractRepository)),
 ) -> None:
     try:
-        await repository.get(network=NetworkEnum[network], address=address)
+        await repository.get(network=NetworkEnum[network], address=contract_address)
     except EntityDoesNotExist:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"{network} contract '{address}' not found!"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"{network} contract '{contract_address}' not found!"
         )
-    return await repository.delete(network=NetworkEnum[network], address=address)
+    return await repository.delete(network=NetworkEnum[network], address=contract_address)
