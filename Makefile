@@ -1,7 +1,4 @@
 
-coffee:
-	@printf 'Enjoy your coffee! \xE2\x98\x95'
-
 dev:
 	@docker compose -f docker-compose.yml up --build
 
@@ -10,6 +7,9 @@ run:
 
 down:
 	@docker compose -f ./docker-compose.yml down --remove-orphans
+
+logs:
+	@docker compose -f ./docker-compose.yml logs -f --tail 33
 
 shell: run
 	@docker exec -it fastapi_nft bash
