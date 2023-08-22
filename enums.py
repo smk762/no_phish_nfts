@@ -1,28 +1,41 @@
-from enum import Enum
+from enum import Enum, EnumMeta
 
-class MnemonicHqNetworkEnum(str, Enum):
-    ethereum = "ethereum"
-    polygon = "polygon"
-    
+
+class CaseInsensitiveKeys(EnumMeta):
+    def __getitem__(cls, item):
+        try:
+            return super().__getitem__(item)
+        except:
+            for key in cls._member_map_.keys():
+                if key.casefold() == item.casefold():
+                    return super().__getitem__(key)
+
     def __str__(self) -> str:
         return str.__str__(self)
 
 
-class AlchemyNetworkEnum(str, Enum):
+class MnemonicHqNetworkEnum(str, Enum, metaclass=CaseInsensitiveKeys):
     ethereum = "eth"
     polygon = "polygon"
-    
-    def __str__(self) -> str:
-        return str.__str__(self)
 
 
-class NetworkEnum(str, Enum):
-    # If adding more, match to Moralis API chains
+class AlchemyNetworkEnum(str, Enum, metaclass=CaseInsensitiveKeys):
+    ethereum = "eth"
+    polygon = "polygon"
+
+
+class MoralisNetworkEnum(str, Enum, metaclass=CaseInsensitiveKeys):
     avalanche = "avalanche"
     binance = "bsc"
-    ethereum = "ethereum"
+    ethereum = "eth"
+    fantom = "fantom"
+    polygon = "polygon"
+
+
+class NetworkEnum(str, Enum, metaclass=CaseInsensitiveKeys):
+    avalanche = "avalanche"
+    binance = "bsc"
+    ethereum = "eth"
     fantom = "fantom"
     polygon = "polygon"
     solana = "solana"
-    def __str__(self) -> str:
-        return str.__str__(self)

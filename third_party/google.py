@@ -10,27 +10,18 @@ def check_google_safebrowsing(url: str, local=False) -> bool:
     params = f"key={settings.google_api_key}"
     headers = {"Content-Type": "application/json"}
     body = {
-        "client": {
-            "clientId": "no_phish_nft",
-            "clientVersion": "0.0.1"
-        },
+        "client": {"clientId": "no_phish_nft", "clientVersion": "0.0.1"},
         "threatInfo": {
             "threatTypes": [
                 "MALWARE",
                 "SOCIAL_ENGINEERING",
                 "THREAT_TYPE_UNSPECIFIED",
                 "UNWANTED_SOFTWARE",
-                "POTENTIALLY_HARMFUL_APPLICATION"
+                "POTENTIALLY_HARMFUL_APPLICATION",
             ],
             "platformTypes": ["ANY_PLATFORM"],
-            "threatEntryTypes": [
-                "URL",
-                "THREAT_ENTRY_TYPE_UNSPECIFIED",
-                "EXECUTABLE"
-            ],
-            "threatEntries": [
-                {"url": url}
-            ]
-        }
+            "threatEntryTypes": ["URL", "THREAT_ENTRY_TYPE_UNSPECIFIED", "EXECUTABLE"],
+            "threatEntries": [{"url": url}],
+        },
     }
     return requests.post(f"{baseurl}?{params}", headers=headers, json=body).json()

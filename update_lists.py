@@ -1,29 +1,36 @@
 #!/usr/bin/env python3
-import os
-import json
-import time
-from pathlib import Path
-import requests 
-import tarfile
 import asyncio
+import json
+import os
+import tarfile
+import time
 from os import listdir
-from os.path import isfile, join, basename, exists, realpath, dirname
-from db.sessions import add_domain, dump_domains, add_contract, \
-    dump_contracts, remove_stale_google_domains
-from typing import Optional, List
+from os.path import basename, dirname, exists, isfile, join, realpath
+from pathlib import Path
+from typing import List, Optional
+
+import requests
 from fastapi import Depends
-from enums import NetworkEnum, AlchemyNetworkEnum
+
 from api.dependencies.repositories import get_repository
+from core.config import settings
 from db.repositories.domains import DomainRepository
 from db.schemas.domains import DomainAdd, DomainRead
-from core.config import settings
-from third_party.alchemy import check_alchemy
+from db.sessions import (
+    add_contract,
+    add_domain,
+    dump_contracts,
+    dump_domains,
+    remove_stale_google_domains,
+)
+from enums import AlchemyNetworkEnum, NetworkEnum
 from logger import logger
-
+from third_party.alchemy import check_alchemy
 
 script_path = realpath(dirname(__file__))
 
-def create_list_folder(list_type):    
+
+def create_list_folder(list_type):
     Path(f"{script_path}/lists/{list_type}").mkdir(parents=True, exist_ok=True)
 
 
@@ -44,7 +51,7 @@ def get_json_file(link):
 def extract_tar_url(url, extract_path, fn):
     response = requests.get(url, stream=True)
     if response.status_code == 200:
-        with open(f"{extract_path}/{fn}", 'wb') as f:
+        with open(f"{extract_path}/{fn}", "wb") as f:
             f.write(response.raw.read())
         with tarfile.open(f"{extract_path}/{fn}", mode="r:gz") as tf:
             tf.extractall(extract_path)
@@ -69,13 +76,13 @@ def update_source_files(list_type, urls, cron=True):
         if fn.endswith(".tar.gz"):
             extract_tar_url(url, list_path, fn)
         elif fn.endswith(".txt"):
-            with open(f"{list_path}/{fn}", 'w') as f:
+            with open(f"{list_path}/{fn}", "w") as f:
                 f.write(get_text_file(url))
         elif fn.endswith(".yaml"):
-            with open(f"{list_path}/{fn}", 'w') as f:
+            with open(f"{list_path}/{fn}", "w") as f:
                 f.write(get_text_file(url))
         elif fn.endswith(".json"):
-            with open(f"{list_path}/{fn}", 'w') as f:
+            with open(f"{list_path}/{fn}", "w") as f:
                 json.dump(get_json_file(url), f)
         logger.info(f"Updated {url}")
 
@@ -85,7 +92,7 @@ def update_db():
     known_contracts = {}
     for network in [i.name for i in NetworkEnum]:
         try:
-            migrate_alchemy_spam_contracts(AlchemyNetworkEnum[network], known_contracts[network])
+            migrate_alchemy_spam_contracts(network, known_contracts[network])
         except KeyError as e:
             pass
         known_contracts[network] = dump_contracts(network, True)
@@ -101,7 +108,9 @@ def update_db():
                         if list_type == "contracts":
                             # TODO: Currently there is no txt file source for contracts
                             # When there is, we'll need to define network here
-                            add_contracts(file, "unknown", data, known_contracts[network])
+                            add_contracts(
+                                file, "unknown", data, known_contracts[network]
+                            )
                         elif list_type == "domains":
                             add_domains(data, file, known_domains)
 
@@ -110,8 +119,12 @@ def update_db():
                         data = json.load(f)
                         if list_type == "contracts":
                             if network in data:
-                                print(data[network])
-                                add_contracts(file, network, data[network], known_contracts[network])
+                                add_contracts(
+                                    file,
+                                    network,
+                                    data[network],
+                                    known_contracts[network],
+                                )
                         elif list_type == "domains":
                             if "blacklist" in data:
                                 data = data["blacklist"]
@@ -137,20 +150,30 @@ def update_db():
                     continue
 
                 else:
-                    logger.warning(f"Skipping {file}, it is not a regoconised format...")
+                    logger.warning(
+                        f"Skipping {file}, it is not a regoconised format..."
+                    )
                     time.sleep(3)
 
 
 def parse_yaml(rawdata):
-    return [i.split(" ")[-1].strip() for i in rawdata if i.find("url:") + i.find("mint:") > -1]
+    return [
+        i.split(" ")[-1].strip()
+        for i in rawdata
+        if i.find("url:") + i.find("mint:") > -1
+    ]
 
 
 def migrate_alchemy_spam_contracts(network, known_contracts):
     source = "alchemy"
     data = check_alchemy(network)
     addresses = list(set(data) - set(known_contracts))
-    logger.info(f"{len(addresses)} contract addresses to process for {network} from {source}...")
-    logger.info(f"{len(known_contracts)} known_contracts for {network} from {source}...")
+    logger.info(
+        f"{len(addresses)} contract addresses to process for {network} from {source}..."
+    )
+    logger.info(
+        f"{len(known_contracts)} known_contracts for {network} from {source}..."
+    )
     for address in addresses:
         try:
             add_contract(source, network, address, True)
@@ -161,7 +184,6 @@ def migrate_alchemy_spam_contracts(network, known_contracts):
 
 
 def add_contracts(source, network, contracts, known_contracts):
-    print(network)
     if known_contracts:
         logger.info(f"{len(known_contracts)} contracts in the blocklist")
     contracts = list(set(contracts) - set(known_contracts))
@@ -183,7 +205,7 @@ def add_domains(domains, source, known_domains):
         add_domain(domain, source, True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     remove_stale_google_domains(True)
     update_source_data()
     update_db()

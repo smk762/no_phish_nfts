@@ -14,5 +14,6 @@ class DomainRead(DomainBase):
 class DomainPatch(DomainBase):
     ...
 
+
 class DomainAdd(DomainBase):
     ...

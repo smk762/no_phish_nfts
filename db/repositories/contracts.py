@@ -1,28 +1,25 @@
-from typing import Optional, List
+from typing import List, Optional
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from enums import NetworkEnum
 from db.errors import EntityDoesNotExist
-from db.tables.contracts import Contract
 from db.schemas.contracts import ContractCreate, ContractPatch, ContractRead
+from db.tables.contracts import Contract
+from enums import NetworkEnum
 
 
 class ContractRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def _get_instance(self, address: str, network: str=None):
-        statement = (
-            select(Contract)
-            .where(Contract.address == address)
-        )
+    async def _get_instance(self, address: str, network: str = None):
+        statement = select(Contract).where(Contract.address == address)
         if network:
             statement = (
                 select(Contract)
                 .where(Contract.address == address)
-                .where(Contract.network == NetworkEnum[network])
+                .where(Contract.network == network)
             )
         results = await self.session.exec(statement)
         return results.first()
@@ -34,10 +31,12 @@ class ContractRepository:
         await self.session.refresh(db_contract)
         return ContractRead(**db_contract.dict())
 
-    async def list(self, network, limit: int = 10, offset: int = 0) -> List[ContractRead]:
+    async def list(
+        self, network, limit: int = 10, offset: int = 0
+    ) -> List[ContractRead]:
         statement = (
             select(Contract)
-            .where(Contract.network == NetworkEnum[network])
+            .where(Contract.network == network)
             .offset(offset)
             .limit(limit)
             .order_by(Contract.updated.desc())
@@ -45,15 +44,13 @@ class ContractRepository:
         results = await self.session.exec(statement)
         return [ContractRead(**contract.dict()) for contract in results]
 
-    async def get(self, address: str, network: str=None) -> Optional[ContractRead]:
+    async def get(self, address: str, network: str = None) -> Optional[ContractRead]:
         db_contract = await self._get_instance(address, network)
         if db_contract is None:
             raise EntityDoesNotExist
         return ContractRead(**db_contract.dict())
 
-    async def patch(
-        self, contract_patch: ContractPatch
-    ) -> Optional[ContractRead]:
+    async def patch(self, contract_patch: ContractPatch) -> Optional[ContractRead]:
         db_contract = await self._get_instance(contract_patch.address)
         if db_contract is None:
             raise EntityDoesNotExist

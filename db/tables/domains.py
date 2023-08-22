@@ -1,12 +1,13 @@
-from sqlmodel import Field, SQLModel
 from sqlalchemy import UniqueConstraint
+from sqlmodel import Field, SQLModel
+
 from db.tables.base_class import TimestampModel, UUIDModel
 from helper import now
 
 
 class DomainBase(SQLModel):
     url: str = Field(nullable=False)
-    source: str = Field(nullable=False, default="")
+    source: str = Field(nullable=False)
     cache: int = Field(nullable=False, default=2000000000)
 
 

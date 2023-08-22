@@ -47,10 +47,16 @@ sudo systemctl restart docker
 - Create network for project with `docker network create nft-net`
 - Copy `.env.example` to `.env` and populate with required environment variables
 - Use `poetry install` to install dependencies
-- Use `docker compose build` to build the containers
-- Use `docker compose up -d` to run the containers as a daemon
-- Use `docker compose logs -f --tail 33` to view runtime logs
 - Use `poetry run ./create_tables.py` to create the `domains` and `contracts` tables. Note: This will drop existing tables if re-run later.
+
+### Usage
+
+- Use `make run` to build and run the API container
+- Use `make dev` to build and run the API container with dev dependencies
+- Use `make down` to stop the API container
+- Use `make shell` to enter console in the API container
+- Use `make logs` to tail the API container logs
+- Use `make tests` to run all tests
 
 
 ### Crons

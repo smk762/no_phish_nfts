@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
+import logging
 import os
 import sys
-import logging
+
 
 class CustomFormatter(logging.Formatter):
 
@@ -28,15 +29,15 @@ class CustomFormatter(logging.Formatter):
     red = "\x1b[31;20m"
     bold_red = "\x1b[31;1m"
     reset = "\x1b[0m"
-    format = "[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)" # type: ignore
-    datefmt = '%d-%b-%y %H:%M:%S'
+    format = "[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s (%(filename)s:%(lineno)d)"  # type: ignore
+    datefmt = "%d-%b-%y %H:%M:%S"
 
     FORMATS = {
         logging.DEBUG: f"{lightblue}{format}{reset}",
         logging.INFO: f"{lightgreen}{format}{reset}",
         logging.WARNING: f"{red}{format}{reset}",
         logging.ERROR: f"{lightred}{format}{reset}",
-        logging.CRITICAL: f"{bold_red}{format}{reset}"
+        logging.CRITICAL: f"{bold_red}{format}{reset}",
     }
 
     def format(self, record):
@@ -47,7 +48,7 @@ class CustomFormatter(logging.Formatter):
 
 # create logger with project folder name
 logging.basicConfig()
-logger = logging.getLogger('no_phish_nft')
+logger = logging.getLogger("no_phish_nft")
 logger.setLevel(logging.DEBUG)
 logger.propagate = False
 

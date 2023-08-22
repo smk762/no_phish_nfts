@@ -1,12 +1,12 @@
-from typing import Optional, List
+from typing import List, Optional
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
-from db.sessions import dump_domains
 
 from db.errors import EntityDoesNotExist
-from db.tables.domains import Domain
 from db.schemas.domains import DomainCreate, DomainPatch, DomainRead
+from db.sessions import dump_domains
+from db.tables.domains import Domain
 from logger import logger
 
 
@@ -15,10 +15,7 @@ class DomainRepository:
         self.session = session
 
     async def _get_instance(self, url: str):
-        statement = (
-            select(Domain)
-            .where(Domain.url == url)
-        )
+        statement = select(Domain).where(Domain.url == url)
         results = await self.session.exec(statement)
         return results.first()
 
@@ -32,10 +29,7 @@ class DomainRepository:
 
     async def list(self, limit: int = 10, offset: int = 0) -> List[DomainRead]:
         statement = (
-            (select(Domain))
-            .offset(offset)
-            .limit(limit)
-            .order_by(Domain.updated.desc())
+            (select(Domain)).offset(offset).limit(limit).order_by(Domain.updated.desc())
         )
         results = await self.session.exec(statement)
         return [DomainRead(**domain.dict()) for domain in results]
@@ -46,9 +40,7 @@ class DomainRepository:
             raise EntityDoesNotExist
         return DomainRead(**db_domain.dict())
 
-    async def patch(
-        self, url: str, domain_patch: DomainPatch
-    ) -> Optional[DomainRead]:
+    async def patch(self, url: str, domain_patch: DomainPatch) -> Optional[DomainRead]:
         db_domain = await self._get_instance(url)
         if db_domain is None:
             raise EntityDoesNotExist

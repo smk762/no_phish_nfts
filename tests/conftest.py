@@ -11,11 +11,13 @@ from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from core.config import settings
-from schemas.transactions import TransactionCreate
+from db.schemas.contracts import ContractCreate
+from db.schemas.domains import DomainCreate
+from enums import NetworkEnum
 
 test_db = (
     f"postgresql+asyncpg://{settings.postgres_user}:{settings.postgres_password}"
-    f"@{settings.postgres_server}:{settings.postgres_port}/{settings.postgres_db_tests}"
+    f"@{settings.postgres_server}:{settings.postgres_port}/{settings.postgres_db}"
 )
 
 engine = create_async_engine(
@@ -65,27 +67,30 @@ def app(override_get_db: Callable) -> FastAPI:
 
 @pytest_asyncio.fixture()
 async def async_client(app: FastAPI) -> AsyncGenerator:
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(
+        app=app, base_url="http://192.168.1.203:8000/api/blocklist"
+    ) as ac:
         yield ac
 
 
 @pytest.fixture()
-def create_transaction():
-    def _create_transaction(
-        amount: int = 10,
-        description: str = "Text description",
+def create_contract():
+    def _create_contract(
+        address: str,
+        network: NetworkEnum,
+        source: str,
     ):
-        return TransactionCreate(amount=amount, description=description)
+        return ContractCreate(address=address, network=network, source=source)
 
-    return _create_transaction
+    return _create_contract
 
 
 @pytest.fixture()
-def create_transactions(create_transaction):
-    def _create_transactions(_qty: int = 1):
-        return [
-            create_transaction(amount=i, description=f"Transaction number {i}")
-            for i in range(_qty)
-        ]
+def create_domain():
+    def _create_domain(
+        url: str,
+        source: str,
+    ):
+        return DomainCreate(url=url, source=source)
 
-    return _create_transactions
+    return _create_domain

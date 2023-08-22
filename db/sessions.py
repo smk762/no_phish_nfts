@@ -1,20 +1,22 @@
+import os
+import sys
+import time
+from typing import List
+
+import requests
+import sqlalchemy
+from sqlalchemy import delete, select, update, values
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
-import sqlalchemy
-from sqlalchemy import select, update, delete, values
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
-import requests
-import time
-import sys
-import os
 
-from enums import NetworkEnum
 from core.config import settings
-from db.tables.domains import Domain
 from db.tables.contracts import Contract
-from third_party.google import check_google_safebrowsing
+from db.tables.domains import Domain
+from enums import NetworkEnum
 from logger import logger
+from third_party.google import check_google_safebrowsing
 
 engine = create_engine(
     url=settings.sync_database_url,
@@ -38,7 +40,7 @@ async_session = sessionmaker(
 
 
 def add_contract(source, network, address, local=False):
-    contract = Contract(source=source, network=NetworkEnum[network], address=address)
+    contract = Contract(source=source, network=network, address=address)
     eng = engine
     if local:
         eng = local_engine
@@ -57,28 +59,30 @@ def dump_contracts(network, local=False):
     if local:
         eng = local_engine
     with Session(eng) as session:
-        r = session.execute((select(Contract.address)).where(Contract.network == NetworkEnum[network]))
+        r = session.execute(
+            (select(Contract.address)).where(Contract.network == network)
+        )
         return [i.address for i in r]
 
 
-def is_contract_bad(network: str, address: str) -> bool:
+def scan_contracts(network: str, addresses: str) -> dict:
     with Session(engine) as session:
+        result = {}
+        addresses = addresses.split(",")
+        [result.update({i: False}) for i in addresses]
         sql = (
             select(Contract.address)
-            .where(Contract.address == address)
-            .where(Contract.network == NetworkEnum[network])
-            .limit(1)
+            .where(Contract.address.in_(addresses))
+            .where(Contract.network == network)
         )
-        return len([i.address for i in session.execute(sql)]) != 0
+        matches = session.execute(sql)
+        for i in matches:
+            result.update({i.address: True})
+        return result
 
 
 def add_domain(url, source="", local=False, cache=200000000):
-    domain = Domain(
-        url=url,
-        source=source,
-        local=local,
-        cache=cache
-    )
+    domain = Domain(url=url, source=source, local=local, cache=cache)
     eng = engine
     if local:
         eng = local_engine
@@ -102,32 +106,34 @@ def dump_domains(local=False):
         return [i.url for i in r]
 
 
+def scan_domains(urls: str, local: bool = False) -> dict:
+    result = {}
+    urls = urls.split(",")
+    urls = [url.replace("http://", "").replace("http://", "") for url in urls]
+    [result.update({i: False}) for i in urls]
 
-def is_domain_bad(url: str, local: bool = False) -> bool:
-    url = url.replace("http://", "").replace("http://", "")
-    with Session(engine) as session:
-        sql = (
-            select(Domain)
-            .where(Domain.url == url)
-            .limit(1)
-        )
-        r = session.execute(sql)
-        data = [i for i in r]
-        if len(data) == 0:
-            logger.warning(f"No entries for {url} in DB")
-            r = check_google_safebrowsing(url)
-            logger.debug(f"{url}: {r}")
-            if "matches" in r:
-                if "cacheDuration" in r["matches"][0]:
-                    cache = int(r["matches"][0]["cacheDuration"][:-1])
-                    remove_stale_google_domains(local)
-                    try:
-                        add_domain(url, "google", local, cache)
-                    except Exception as e:
-                        logger.error(e)
-                return True
-            return False
-        return True
+    eng = engine
+    if local:
+        eng = local_engine
+    with Session(eng) as session:
+        sql = select(Domain.url).where(Domain.url.in_(urls))
+        matches = session.execute(sql)
+        [result.update({i.url: True}) for i in matches]
+
+    for url in [k for k, v in result.items() if not v]:
+        logger.warning(f"No entries for {url} in DB")
+        r = check_google_safebrowsing(url)
+        logger.debug(f"{url}: {r}")
+        if "matches" in r:
+            if "cacheDuration" in r["matches"][0]:
+                cache = int(r["matches"][0]["cacheDuration"][:-1])
+                remove_stale_google_domains(local)
+                try:
+                    add_domain(url, "google", local, cache)
+                except Exception as e:
+                    logger.error(e)
+            result.update({url: True})
+    return result
 
 
 def remove_stale_google_domains(local=False):

@@ -1,8 +1,9 @@
 from fastapi import FastAPI, status
 from fastapi.openapi.utils import get_openapi
-from core.config import settings
-from api.router import router
 
+from api.router import router
+from core.config import settings
+from middleware import LowerCaseMiddleware
 
 app = FastAPI(
     title=settings.title,
@@ -11,10 +12,11 @@ app = FastAPI(
     docs_url=settings.docs_url,
     openapi_url=settings.openapi_url,
     openapi_tags=settings.tags_metadata,
-    swagger_ui_parameters={"defaultModelsExpandDepth": -1}
+    swagger_ui_parameters={"defaultModelsExpandDepth": -1},
 )
 
 app.include_router(router, prefix=settings.api_prefix)
+app.middleware("http")(LowerCaseMiddleware())
 
 
 def custom_openapi():
@@ -29,7 +31,7 @@ def custom_openapi():
     openapi_schema["info"]["x-logo"] = {
         "url": "https://komodoplatform.com/assets/img/logo-dark.webp",
         "backgroundColor": "#CCCCCC",
-        "altText": "Komodoplatform logo"
+        "altText": "Komodoplatform logo",
     }
     app.openapi_schema = openapi_schema
     return app.openapi_schema
