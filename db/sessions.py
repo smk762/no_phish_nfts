@@ -103,7 +103,6 @@ def dump_domains(local=False):
         return [i.url for i in r]
 
 
-
 def is_domain_bad(url: str, local: bool = False) -> bool:
     url = url.replace("http://", "").replace("http://", "")
     with Session(engine) as session:
