@@ -18,7 +18,7 @@ class GlobalConfig(BaseConfig):
         "view": [i for i in os.environ.get("VIEW_API_KEYS").split(" ")],
         "edit": [i for i in os.environ.get("EDIT_API_KEYS").split(" ")]
     }
-    fastapi_port: os.environ.get("DEBUG")
+    fastapi_port: os.environ.get("FASTAPI_PORT")
     debug: bool = os.environ.get("DEBUG")
     postgres_user: str = os.environ.get("POSTGRES_USER")
     postgres_password: str = os.environ.get("POSTGRES_PASSWORD")
