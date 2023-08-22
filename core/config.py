@@ -25,18 +25,17 @@ class GlobalConfig(BaseConfig):
     postgres_server: str = os.environ.get("POSTGRES_SERVER")
     postgres_port: int = int(os.environ.get("POSTGRES_PORT"))
     postgres_db: str = os.environ.get("POSTGRES_DB")
-    postgres_db_tests: str = os.environ.get("POSTGRES_DB_TESTS")
     db_echo_log: bool = True if os.environ.get("DEBUG") == "True" else False
     alchemy_api_key: str = os.environ.get("ALCHEMY_API_KEY")
     google_api_key: str = os.environ.get("GOOGLE_API_KEY")
     mnemonichq_api_key: str = os.environ.get("MNEMONICHQ_API_KEY")
     tags_metadata: dict = [
         {
-            "name": "Addresses",
+            "name": "Wallet Addresses",
             "description": "Information about an NFT address. ETH / Polygon only."
         },
         {
-            "name": "Contracts",
+            "name": "NFT Contracts",
             "description": "Information about NFT contracts marked as spam or malicious."
         },
         {
