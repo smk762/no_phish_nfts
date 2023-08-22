@@ -4,7 +4,7 @@ from fastapi.security.api_key import APIKeyHeader
 from fastapi import Security, HTTPException
 from core.config import settings
 
-api_key_header = APIKeyHeader(name="access_token", auto_error=False)
+api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
 class ApiKeyEnum(str, Enum):
