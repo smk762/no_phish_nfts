@@ -5,6 +5,6 @@ from api.routes.domains import router as domains_router
 
 router = APIRouter()
 
-router.include_router(addresses_router, prefix="/address", tags=["Wallet Addresses"])
+router.include_router(addresses_router, prefix="/wallet", tags=["Wallet Addresses"])
 router.include_router(contracts_router, prefix="/contract", tags=["NFT Contracts"])
 router.include_router(domains_router, prefix="/domain", tags=["Domains"])
