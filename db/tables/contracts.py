@@ -5,9 +5,9 @@ from db.tables.base_class import TimestampModel, UUIDModel
 from helper import now
 
 class ContractBase(SQLModel):
-    address: str = Field(nullable=False, default="")
-    source: str = Field(nullable=False, default="")
-    network: NetworkEnum = Field(default=NetworkEnum.polygon)
+    address: str = Field(nullable=False)
+    source: str = Field(nullable=False)
+    network: NetworkEnum = Field(nullable=False)
 
 
 class Contract(ContractBase, UUIDModel, TimestampModel, table=True):
