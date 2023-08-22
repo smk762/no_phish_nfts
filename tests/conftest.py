@@ -10,8 +10,10 @@ from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from enums import NetworkEnum
 from core.config import settings
 from db.schemas.contracts import ContractCreate
+from db.schemas.domains import DomainCreate
 
 test_db = (
     f"postgresql+asyncpg://{settings.postgres_user}:{settings.postgres_password}"
@@ -65,27 +67,28 @@ def app(override_get_db: Callable) -> FastAPI:
 
 @pytest_asyncio.fixture()
 async def async_client(app: FastAPI) -> AsyncGenerator:
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(app=app, base_url="http://192.168.1.203:8000/api/blocklist") as ac:
         yield ac
 
 
 @pytest.fixture()
 def create_contract():
     def _create_contract(
-        amount: int = 10,
-        description: str = "Text description",
+        address: str,
+        network: NetworkEnum,
+        source: str,
     ):
-        return ContractCreate(amount=amount, description=description)
-
+        return ContractCreate(address=address, network=network, source=source)
     return _create_contract
 
 
 @pytest.fixture()
-def create_contracts(create_contract):
-    def _create_contracts(_qty: int = 1):
-        return [
-            create_contract(amount=i, description=f"contract number {i}")
-            for i in range(_qty)
-        ]
+def create_domain():
+    def _create_domain(
+        url: str,
+        source: str,
+    ):
+        return DomainCreate(url=url, source=source)
 
-    return _create_contracts
+    return _create_domain
+
