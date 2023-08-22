@@ -8,8 +8,10 @@ from enums import MnemonicHqNetworkEnum
 # This API needs a wallet address as input, and only covers ETH/MATIC
 # We can still use it to populate our database via user addresses though.
 def spam_scan(network, address, local=False):
+    print(network)
     contracts = dump_contracts(network)
-    url = f"https://{MnemonicHqNetworkEnum[network]}-rest.api.mnemonichq.com/wallets/v1beta2/{address}/nfts?spam=SPAM_FILTER_ONLY"
+    url = f"https://{network.name}-rest.api.mnemonichq.com/wallets/v1beta2/{address}/nfts?spam=SPAM_FILTER_ONLY"
+    print(url)
     headers = {
         "X-API-Key": settings.mnemonichq_api_key,
         "accept": "application/json"
