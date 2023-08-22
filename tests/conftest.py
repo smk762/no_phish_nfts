@@ -11,11 +11,11 @@ from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from core.config import settings
-from schemas.transactions import TransactionCreate
+from db.schemas.contracts import ContractCreate
 
 test_db = (
     f"postgresql+asyncpg://{settings.postgres_user}:{settings.postgres_password}"
-    f"@{settings.postgres_server}:{settings.postgres_port}/{settings.postgres_db_tests}"
+    f"@{settings.postgres_server}:{settings.postgres_port}/{settings.postgres_db}"
 )
 
 engine = create_async_engine(
@@ -70,22 +70,22 @@ async def async_client(app: FastAPI) -> AsyncGenerator:
 
 
 @pytest.fixture()
-def create_transaction():
-    def _create_transaction(
+def create_contract():
+    def _create_contract(
         amount: int = 10,
         description: str = "Text description",
     ):
-        return TransactionCreate(amount=amount, description=description)
+        return ContractCreate(amount=amount, description=description)
 
-    return _create_transaction
+    return _create_contract
 
 
 @pytest.fixture()
-def create_transactions(create_transaction):
-    def _create_transactions(_qty: int = 1):
+def create_contracts(create_contract):
+    def _create_contracts(_qty: int = 1):
         return [
-            create_transaction(amount=i, description=f"Transaction number {i}")
+            create_contract(amount=i, description=f"contract number {i}")
             for i in range(_qty)
         ]
 
-    return _create_transactions
+    return _create_contracts

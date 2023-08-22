@@ -3,22 +3,22 @@ coffee:
 	@printf 'Enjoy your coffee! \xE2\x98\x95'
 
 dev:
-	@docker compose -f docker-compose.yaml up --build
+	@docker compose -f docker-compose.yml up --build
 
 run:
-	@docker compose -f docker-compose.yaml up --build -d
+	@docker compose -f docker-compose.yml up --build -d
 
 down:
-	@docker compose -f ./docker-compose.yaml down --remove-orphans
+	@docker compose -f ./docker-compose.yml down --remove-orphans
 
 shell: run
-	@docker exec -it fastapi_service bash
+	@docker exec -it fastapi_nft bash
 
 tests: run
-	@docker exec -it fastapi_service poetry run pytest
+	@docker exec -it fastapi_nft poetry run pytest
 
 lint: run
-	@docker exec -it fastapi_service poetry run black .
-	@docker exec -it fastapi_service poetry run isort . --profile black
+	@docker exec -it fastapi_nft poetry run black .
+	@docker exec -it fastapi_nft poetry run isort . --profile black
 
 .PHONY: coffee dev run stop shell tests lint
