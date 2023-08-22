@@ -38,7 +38,7 @@ async_session = sessionmaker(
 
 
 def add_contract(source, network, address, local=False):
-    contract = Contract(source=source, network=NetworkEnum[network], address=address)
+    contract = Contract(source=source, network=network, address=address)
     eng = engine
     if local:
         eng = local_engine
@@ -53,11 +53,12 @@ def add_contract(source, network, address, local=False):
 
 
 def dump_contracts(network, local=False):
+    print(network)
     eng = engine
     if local:
         eng = local_engine
     with Session(eng) as session:
-        r = session.execute((select(Contract.address)).where(Contract.network == NetworkEnum[network]))
+        r = session.execute((select(Contract.address)).where(Contract.network == network))
         return [i.address for i in r]
 
 
@@ -66,7 +67,7 @@ def is_contract_bad(network: str, address: str) -> bool:
         sql = (
             select(Contract.address)
             .where(Contract.address == address)
-            .where(Contract.network == NetworkEnum[network])
+            .where(Contract.network == network)
             .limit(1)
         )
         return len([i.address for i in session.execute(sql)]) != 0

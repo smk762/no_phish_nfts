@@ -10,7 +10,6 @@ class CaseInsensitiveKeys(EnumMeta):
                 if key.casefold() == item.casefold():
                     return super().__getitem__(key)
     def __str__(self) -> str:
-        print(dir(self))
         return str.__str__(self)
     
 

@@ -8,10 +8,8 @@ from enums import MnemonicHqNetworkEnum
 # This API needs a wallet address as input, and only covers ETH/MATIC
 # We can still use it to populate our database via user addresses though.
 def spam_scan(network, address, local=False):
-    print(network)
     contracts = dump_contracts(network)
     url = f"https://{network.name}-rest.api.mnemonichq.com/wallets/v1beta2/{address}/nfts?spam=SPAM_FILTER_ONLY"
-    print(url)
     headers = {
         "X-API-Key": settings.mnemonichq_api_key,
         "accept": "application/json"
@@ -23,11 +21,11 @@ def spam_scan(network, address, local=False):
             if nft['spam']:
                 contract = nft['nft']['contractAddress']
                 spam_contracts.append(contract)
-                logger.info(f"{contract} is spam")
+                logger.info(f"Mnemonichq detects {contract} on {network} is spam")
                 if contract not in contracts:
                     add_contract('mnemonichq', network, contract, local)
     return {
-        "network": MnemonicHqNetworkEnum[network],
+        "network": network,
         "address": address,
         "result": f"{len(spam_contracts)} NFTs flagged as spam",
         "spam_contracts": spam_contracts

@@ -85,7 +85,7 @@ def update_db():
     known_contracts = {}
     for network in [i.name for i in NetworkEnum]:
         try:
-            migrate_alchemy_spam_contracts(AlchemyNetworkEnum[network], known_contracts[network])
+            migrate_alchemy_spam_contracts(network, known_contracts[network])
         except KeyError as e:
             pass
         known_contracts[network] = dump_contracts(network, True)
@@ -110,7 +110,6 @@ def update_db():
                         data = json.load(f)
                         if list_type == "contracts":
                             if network in data:
-                                print(data[network])
                                 add_contracts(file, network, data[network], known_contracts[network])
                         elif list_type == "domains":
                             if "blacklist" in data:
@@ -161,11 +160,10 @@ def migrate_alchemy_spam_contracts(network, known_contracts):
 
 
 def add_contracts(source, network, contracts, known_contracts):
-    print(network)
     if known_contracts:
         logger.info(f"{len(known_contracts)} contracts in the blocklist")
     contracts = list(set(contracts) - set(known_contracts))
-    for address in contracts:
+    for address in contracts[:2]:
         add_contract(source, network, address, True)
         logger.info(f"[{source}] Added {address} for {network}")
 
@@ -178,7 +176,7 @@ def add_domains(domains, source, known_domains):
     # Remove path suffix
     domains = [i.split("/")[0] for i in domains]
     domains = list(set(domains) - set(known_domains))
-    for domain in domains:
+    for domain in domains[:2]:
         logger.info(f"Adding {domain} from {source}...")
         add_domain(domain, source, True)
 

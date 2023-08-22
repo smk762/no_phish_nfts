@@ -22,7 +22,7 @@ class ContractRepository:
             statement = (
                 select(Contract)
                 .where(Contract.address == address)
-                .where(Contract.network == NetworkEnum[network])
+                .where(Contract.network == network)
             )
         results = await self.session.exec(statement)
         return results.first()
@@ -37,7 +37,7 @@ class ContractRepository:
     async def list(self, network, limit: int = 10, offset: int = 0) -> List[ContractRead]:
         statement = (
             select(Contract)
-            .where(Contract.network == NetworkEnum[network])
+            .where(Contract.network == network)
             .offset(offset)
             .limit(limit)
             .order_by(Contract.updated.desc())

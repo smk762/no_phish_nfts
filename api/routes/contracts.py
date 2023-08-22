@@ -27,7 +27,7 @@ async def get_contract_list(
     offset: int = Query(default=0),
     repository: ContractRepository = Depends(get_repository(ContractRepository)),
 ) -> List[Optional[ContractRead]]:
-    return await repository.list(limit=limit, offset=offset, network=NetworkEnum[network])
+    return await repository.list(limit=limit, offset=offset, network=network)
 
 
 @router.get(
@@ -97,9 +97,9 @@ async def delete_contract(
     repository: ContractRepository = Depends(get_repository(ContractRepository)),
 ) -> None:
     try:
-        await repository.get(network=NetworkEnum[network], address=contract_address)
+        await repository.get(network=network, address=contract_address)
     except EntityDoesNotExist:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"{network} contract '{contract_address}' not found!"
         )
-    return await repository.delete(network=NetworkEnum[network], address=contract_address)
+    return await repository.delete(network=network, address=contract_address)
