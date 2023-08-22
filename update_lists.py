@@ -163,7 +163,7 @@ def add_contracts(source, network, contracts, known_contracts):
     if known_contracts:
         logger.info(f"{len(known_contracts)} contracts in the blocklist")
     contracts = list(set(contracts) - set(known_contracts))
-    for address in contracts[:2]:
+    for address in contracts:
         add_contract(source, network, address, True)
         logger.info(f"[{source}] Added {address} for {network}")
 
@@ -176,7 +176,7 @@ def add_domains(domains, source, known_domains):
     # Remove path suffix
     domains = [i.split("/")[0] for i in domains]
     domains = list(set(domains) - set(known_domains))
-    for domain in domains[:2]:
+    for domain in domains:
         logger.info(f"Adding {domain} from {source}...")
         add_domain(domain, source, True)
 
