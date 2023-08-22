@@ -2,6 +2,7 @@ from fastapi import FastAPI, status
 from fastapi.openapi.utils import get_openapi
 from core.config import settings
 from api.router import router
+from middleware import LowerCaseMiddleware
 
 
 app = FastAPI(
@@ -15,6 +16,7 @@ app = FastAPI(
 )
 
 app.include_router(router, prefix=settings.api_prefix)
+app.middleware("http")(LowerCaseMiddleware())
 
 
 def custom_openapi():
