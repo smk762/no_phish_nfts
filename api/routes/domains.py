@@ -1,16 +1,19 @@
 from typing import Optional, List
 from uuid import UUID
-
+from pydantic import BaseModel
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
 from api.dependencies.repositories import get_repository
 from db.errors import EntityDoesNotExist
 from db.repositories.domains import DomainRepository
 from db.schemas.domains import DomainAdd, DomainPatch, DomainRead
-from db.sessions import is_domain_bad
+from db.sessions import scan_domains
 from auth import edit_api_key_auth
 
 router = APIRouter()
+
+class UrlList(BaseModel):
+    domains: str
 
 
 @router.get(
@@ -28,18 +31,17 @@ async def get_domain_list(
     return await repository.list(limit=limit, offset=offset)
 
 
-@router.get(
-    "/scan/{domain}",
-    response_model=bool,
+@router.post(
+    "/scan",
+    response_model=dict,
     status_code=status.HTTP_200_OK,
-    name="check_domain",
+    name="check_domains",
     summary="Checks if a domain is tagged as spam."
 )
-async def check_domain(
-    domain: str,
-    repository: DomainRepository = Depends(get_repository(DomainRepository)),
-) -> bool:
-    return is_domain_bad(domain)
+async def check_domains(
+    params: UrlList
+) -> dict:
+    return scan_domains(params.domains)
 
 
 @router.post(

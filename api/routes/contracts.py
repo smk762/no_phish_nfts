@@ -1,17 +1,23 @@
-from typing import Optional, List
+from typing import Optional, List, Set
 from uuid import UUID
-
+from pydantic import BaseModel
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
 from api.dependencies.repositories import get_repository
 from db.errors import EntityDoesNotExist
 from db.repositories.contracts import ContractRepository
 from db.schemas.contracts import ContractAdd, ContractPatch, ContractRead
-from db.sessions import is_contract_bad
+from db.sessions import scan_contracts
 from enums import NetworkEnum
 from auth import edit_api_key_auth
+from logger import logger
 
 router = APIRouter()
+
+class AddressList(BaseModel):
+    network: str
+    addresses: str
+
 
 
 @router.get(
@@ -30,21 +36,25 @@ async def get_contract_list(
     return await repository.list(limit=limit, offset=offset, network=network)
 
 
-@router.get(
-    "/scan/{network}/{contract_address}",
+@router.post(
+    "/scan",
     response_model=dict,
     status_code=status.HTTP_200_OK,
-    name="check_contract",
-    summary="Checks if a contract address is tagged as spam."
+    name="check_contracts",
+    summary="Checks if a list of contract addresses are tagged as spam. Addresses should be separated by a comma. For example: `0x0ded8542fc8b2b4e781b96e99fee6406550c9b7c,0x8d1355b65da254f2cc4611453adfa8b7a13f60ee`"
 )
 async def check_contract(
-    network: NetworkEnum,
-    contract_address: str,
-    repository: ContractRepository = Depends(get_repository(ContractRepository)),
+    params: AddressList
 ) -> dict:
-    return {
-        "result": is_contract_bad(network, contract_address)
-    }
+    network = params.network.lower()
+    networks = [i.value for i in NetworkEnum]
+    if network in networks:
+        addresses = params.addresses
+        return {
+            "result": scan_contracts(network, addresses)
+        }
+    else:
+        logger.info(f"Network `{network}` is invalid. Use one of {networks}")
 
 
 @router.post(
