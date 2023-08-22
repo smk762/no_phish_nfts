@@ -1,16 +1,18 @@
-from typing import Optional, List
+from typing import List, Optional
 from uuid import UUID
-from pydantic import BaseModel
+
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from pydantic import BaseModel
 
 from api.dependencies.repositories import get_repository
+from auth import edit_api_key_auth
 from db.errors import EntityDoesNotExist
 from db.repositories.domains import DomainRepository
 from db.schemas.domains import DomainAdd, DomainPatch, DomainRead
 from db.sessions import scan_domains
-from auth import edit_api_key_auth
 
 router = APIRouter()
+
 
 class UrlList(BaseModel):
     domains: str
@@ -21,7 +23,7 @@ class UrlList(BaseModel):
     response_model=List[Optional[DomainRead]],
     status_code=status.HTTP_200_OK,
     name="get_domain_list",
-    summary="Returns a list of domains tagged as spam."
+    summary="Returns a list of domains tagged as spam.",
 )
 async def get_domain_list(
     limit: int = Query(default=10, lte=100),
@@ -36,11 +38,9 @@ async def get_domain_list(
     response_model=dict,
     status_code=status.HTTP_200_OK,
     name="check_domains",
-    summary="Checks if a domain is tagged as spam."
+    summary="Checks if a domain is tagged as spam.",
 )
-async def check_domains(
-    params: UrlList
-) -> dict:
+async def check_domains(params: UrlList) -> dict:
     return scan_domains(params.domains)
 
 
@@ -50,7 +50,7 @@ async def check_domains(
     status_code=status.HTTP_201_CREATED,
     name="add_domain",
     summary="Adds a domain to the local DB. Requires auth.",
-    dependencies=[Depends(edit_api_key_auth)]
+    dependencies=[Depends(edit_api_key_auth)],
 )
 async def add_domain(
     domain_create: DomainAdd = Body(...),
@@ -65,7 +65,7 @@ async def add_domain(
     status_code=status.HTTP_200_OK,
     name="update_domain",
     summary="Updates a domain in the local DB. Requires auth.",
-    dependencies=[Depends(edit_api_key_auth)]
+    dependencies=[Depends(edit_api_key_auth)],
 )
 async def update_domain(
     domain_patch: DomainPatch = Body(...),
@@ -75,12 +75,10 @@ async def update_domain(
         await repository.get(url=domain_patch.url)
     except EntityDoesNotExist:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Domain '{domain_patch.url}' not found!"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Domain '{domain_patch.url}' not found!",
         )
-    return await repository.patch(
-        url=domain_patch.url,
-        domain_patch=domain_patch
-    )
+    return await repository.patch(url=domain_patch.url, domain_patch=domain_patch)
 
 
 @router.delete(
@@ -88,7 +86,7 @@ async def update_domain(
     status_code=status.HTTP_204_NO_CONTENT,
     name="delete_domain",
     summary="Deletes a contract from the local DB. Requires auth.",
-    dependencies=[Depends(edit_api_key_auth)]
+    dependencies=[Depends(edit_api_key_auth)],
 )
 async def delete_domain(
     url: str,

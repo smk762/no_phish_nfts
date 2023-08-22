@@ -13,6 +13,7 @@ class ContractRead(ContractBase):
 
 class ContractPatch(ContractBase):
     ...
-    
+
+
 class ContractAdd(ContractBase):
     ...

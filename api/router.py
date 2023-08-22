@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+
 from api.routes.addresses import router as addresses_router
 from api.routes.contracts import router as contracts_router
 from api.routes.domains import router as domains_router

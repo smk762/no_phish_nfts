@@ -9,6 +9,7 @@ from db.schemas.contracts import ContractPatch
 from enums import NetworkEnum
 from logger import logger
 
+
 @pytest.mark.asyncio
 async def test_create_contract(db_session: AsyncSession, create_contract):
     address = "test"
@@ -69,9 +70,7 @@ async def test_update_contract(db_session: AsyncSession, create_contract):
     for final_network in options[:-1]:
         update_contract = await repository.patch(
             contract_patch=ContractPatch(
-                address=address,
-                source=final_source,
-                network=final_network
+                address=address, source=final_source, network=final_network
             ),
         )
         assert update_contract.network == final_network

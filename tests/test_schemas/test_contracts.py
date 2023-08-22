@@ -4,6 +4,7 @@ from pydantic import ValidationError
 from db.schemas.contracts import ContractCreate
 from logger import logger
 
+
 def test_contract_instance_empty():
     with pytest.raises(expected_exception=ValidationError):
         ContractCreate()
@@ -37,5 +38,3 @@ def test_contract_instance_address_wrong():
 def test_contract_instance_source_wrong():
     with pytest.raises(expected_exception=ValidationError):
         ContractCreate(address="test", network="test", source=5)
-
-

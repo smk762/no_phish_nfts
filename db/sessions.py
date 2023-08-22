@@ -1,21 +1,22 @@
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.orm import sessionmaker
-import sqlalchemy
-from sqlalchemy import select, update, delete, values
-from sqlmodel import Session, SQLModel, create_engine
-from sqlmodel.ext.asyncio.session import AsyncSession
-import requests
-import time
-import sys
 import os
+import sys
+import time
 from typing import List
 
-from enums import NetworkEnum
+import requests
+import sqlalchemy
+from sqlalchemy import delete, select, update, values
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.orm import sessionmaker
+from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel.ext.asyncio.session import AsyncSession
+
 from core.config import settings
-from db.tables.domains import Domain
 from db.tables.contracts import Contract
-from third_party.google import check_google_safebrowsing
+from db.tables.domains import Domain
+from enums import NetworkEnum
 from logger import logger
+from third_party.google import check_google_safebrowsing
 
 engine = create_engine(
     url=settings.sync_database_url,
@@ -58,14 +59,16 @@ def dump_contracts(network, local=False):
     if local:
         eng = local_engine
     with Session(eng) as session:
-        r = session.execute((select(Contract.address)).where(Contract.network == network))
+        r = session.execute(
+            (select(Contract.address)).where(Contract.network == network)
+        )
         return [i.address for i in r]
 
 
 def scan_contracts(network: str, addresses: str) -> dict:
     with Session(engine) as session:
         result = {}
-        addresses = addresses.split(',')
+        addresses = addresses.split(",")
         [result.update({i: False}) for i in addresses]
         sql = (
             select(Contract.address)
@@ -79,12 +82,7 @@ def scan_contracts(network: str, addresses: str) -> dict:
 
 
 def add_domain(url, source="", local=False, cache=200000000):
-    domain = Domain(
-        url=url,
-        source=source,
-        local=local,
-        cache=cache
-    )
+    domain = Domain(url=url, source=source, local=local, cache=cache)
     eng = engine
     if local:
         eng = local_engine
@@ -110,21 +108,18 @@ def dump_domains(local=False):
 
 def scan_domains(urls: str, local: bool = False) -> dict:
     result = {}
-    urls = urls.split(',')
+    urls = urls.split(",")
     urls = [url.replace("http://", "").replace("http://", "") for url in urls]
     [result.update({i: False}) for i in urls]
-    
+
     eng = engine
     if local:
         eng = local_engine
     with Session(eng) as session:
-        sql = (
-            select(Domain.url)
-            .where(Domain.url.in_(urls))
-        )
+        sql = select(Domain.url).where(Domain.url.in_(urls))
         matches = session.execute(sql)
         [result.update({i.url: True}) for i in matches]
-    
+
     for url in [k for k, v in result.items() if not v]:
         logger.warning(f"No entries for {url} in DB")
         r = check_google_safebrowsing(url)

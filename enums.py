@@ -9,9 +9,10 @@ class CaseInsensitiveKeys(EnumMeta):
             for key in cls._member_map_.keys():
                 if key.casefold() == item.casefold():
                     return super().__getitem__(key)
+
     def __str__(self) -> str:
         return str.__str__(self)
-    
+
 
 class MnemonicHqNetworkEnum(str, Enum, metaclass=CaseInsensitiveKeys):
     ethereum = "eth"

@@ -1,5 +1,6 @@
-from sqlmodel import Field, SQLModel
 from sqlalchemy import UniqueConstraint
+from sqlmodel import Field, SQLModel
+
 from db.tables.base_class import TimestampModel, UUIDModel
 from helper import now
 

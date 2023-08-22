@@ -1,8 +1,10 @@
-from sqlmodel import Field, SQLModel
 from sqlalchemy import UniqueConstraint
-from enums import NetworkEnum
+from sqlmodel import Field, SQLModel
+
 from db.tables.base_class import TimestampModel, UUIDModel
+from enums import NetworkEnum
 from helper import now
+
 
 class ContractBase(SQLModel):
     address: str = Field(nullable=False)

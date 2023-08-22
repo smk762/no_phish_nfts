@@ -1,6 +1,8 @@
 from uuid import UUID, uuid4
+
 import pytest
 from sqlmodel.ext.asyncio.session import AsyncSession
+
 from db.errors import EntityDoesNotExist
 from db.repositories.domains import DomainRepository
 from db.schemas.domains import DomainPatch
@@ -58,9 +60,7 @@ async def test_update_domain(db_session: AsyncSession, create_domain):
     db_domain = await repository.create(domain)
     update_domain = await repository.patch(
         url=init_url,
-        domain_patch=DomainPatch(
-            url=final_url, source=final_source
-        ),
+        domain_patch=DomainPatch(url=final_url, source=final_source),
     )
     assert update_domain.url == final_url
     assert update_domain.source == final_source

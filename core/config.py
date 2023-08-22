@@ -16,7 +16,7 @@ class GlobalConfig(BaseConfig):
     api_prefix: str = "/api/blocklist"
     valid_api_keys: dict = {
         "view": [i for i in os.environ.get("VIEW_API_KEYS").split(" ")],
-        "edit": [i for i in os.environ.get("EDIT_API_KEYS").split(" ")]
+        "edit": [i for i in os.environ.get("EDIT_API_KEYS").split(" ")],
     }
     fastapi_port: os.environ.get("FASTAPI_PORT")
     debug: bool = os.environ.get("DEBUG")
@@ -32,18 +32,17 @@ class GlobalConfig(BaseConfig):
     tags_metadata: dict = [
         {
             "name": "Wallet Addresses",
-            "description": "Information about an NFT address. ETH / Polygon only."
+            "description": "Information about an NFT address. ETH / Polygon only.",
         },
         {
             "name": "NFT Contracts",
-            "description": "Information about NFT contracts marked as spam or malicious."
+            "description": "Information about NFT contracts marked as spam or malicious.",
         },
         {
             "name": "Domains",
             "description": "Information about domains marked as malicious. Input should exclude `http://` and `https://`",
-        }
+        },
     ]
-
 
     @property
     def sync_database_url(self) -> str:

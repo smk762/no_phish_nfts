@@ -1,10 +1,13 @@
 from uuid import UUID
+
 import pytest
 from fastapi import status
+
+from core.config import settings
 from db.repositories.contracts import ContractRepository
 from enums import NetworkEnum
 from logger import logger
-from core.config import settings
+
 
 @pytest.mark.asyncio
 async def test_get_contracts(async_client):
@@ -22,22 +25,15 @@ async def test_get_contracts(async_client):
 @pytest.mark.asyncio
 async def test_create_and_delete_contract(async_client, create_contract):
     for network in [i.value for i in NetworkEnum]:
-        contract = create_contract(
-            "test contract",
-            network, "test"
-        )
+        contract = create_contract("test contract", network, "test")
         url = f"/contract/create"
-        response = await async_client.post(
-            url, json=contract.dict()
-        )
+        response = await async_client.post(url, json=contract.dict())
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         headers = {
             "X-API-Key": settings.valid_api_keys["edit"][0],
-            "accept": "application/json"
+            "accept": "application/json",
         }
-        response = await async_client.post(
-            url, json=contract.dict(), headers=headers
-        )
+        response = await async_client.post(url, json=contract.dict(), headers=headers)
         assert response.status_code == status.HTTP_201_CREATED
         assert response.json()["address"] == contract.address
         assert response.json()["network"] == contract.network
@@ -48,7 +44,7 @@ async def test_create_and_delete_contract(async_client, create_contract):
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         headers = {
             "X-API-Key": settings.valid_api_keys["edit"][0],
-            "accept": "application/json"
+            "accept": "application/json",
         }
         response = await async_client.delete(url, headers=headers)
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -59,17 +55,13 @@ async def test_get_contract(async_client, create_contract):
     for network in [i.value for i in NetworkEnum]:
         url = f"/contract/create"
         contract = create_contract(
-            address="test contract",
-            network=network,
-            source="test"
+            address="test contract", network=network, source="test"
         )
         headers = {
             "X-API-Key": settings.valid_api_keys["edit"][0],
-            "accept": "application/json"
+            "accept": "application/json",
         }
-        response = await async_client.post(
-            url, json=contract.dict(), headers=headers
-        )
+        response = await async_client.post(url, json=contract.dict(), headers=headers)
         assert response.status_code == status.HTTP_201_CREATED
         response = await async_client.get(f"/contract/{network}/list")
         assert response.status_code == status.HTTP_200_OK
@@ -85,28 +77,18 @@ async def test_update_contract(async_client, create_contract):
     new_source = "new_source"
     headers = {
         "X-API-Key": settings.valid_api_keys["edit"][0],
-        "accept": "application/json"
+        "accept": "application/json",
     }
 
     network = "polygon"
     contract = create_contract(address=address, network=network, source="old_source")
     response = await async_client.post(
-        "/contract/create",
-        json=contract.dict(),
-        headers=headers
+        "/contract/create", json=contract.dict(), headers=headers
     )
     logger.info(response.json())
-    body = {
-            "address": address,
-            "source": new_source,
-            "network": network
-    }
+    body = {"address": address, "source": new_source, "network": network}
     logger.debug(f"body: {body}")
-    response = await async_client.put(
-        f"/contract/update",
-        headers=headers,
-        json=body
-    )
+    response = await async_client.put(f"/contract/update", headers=headers, json=body)
     logger.info(response.json())
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["address"] == address
