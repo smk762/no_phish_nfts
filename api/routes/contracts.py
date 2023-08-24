@@ -51,7 +51,9 @@ async def check_contract(params: AddressList) -> dict:
         addresses = params.addresses
         return {"result": scan_contracts(network, addresses)}
     else:
-        logger.info(f"Network `{network}` is invalid. Use one of {networks}")
+        error = f"Network `{network}` is invalid. Use one of {networks}"
+        logger.info(error)
+        return {"result": {}, "error": error}
 
 
 @router.post(

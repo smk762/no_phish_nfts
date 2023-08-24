@@ -41,7 +41,7 @@ async def get_domain_list(
     summary="Checks if a domain is tagged as spam.",
 )
 async def check_domains(params: UrlList) -> dict:
-    return scan_domains(params.domains)
+    return {"result": scan_domains(params.domains)}
 
 
 @router.post(
