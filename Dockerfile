@@ -3,7 +3,7 @@ FROM python:3.10
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-WORKDIR /home/app
+WORKDIR /home/api
 COPY ./pyproject.toml ./poetry.lock* init.sh ./
 
 RUN pip install poetry
