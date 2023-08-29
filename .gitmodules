@@ -1,0 +1,4 @@
+[submodule "camo-rs"]
+	path = camo-rs
+	url = https://github.com/smk762/camo-rs
+	branch = develop

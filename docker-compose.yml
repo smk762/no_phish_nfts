@@ -9,12 +9,31 @@ services:
     container_name: fastapi_nft
     depends_on:
       - pgsql_db
+      - camo_rs
     ports:
-      - "8000:8000"
+      - "8090:8090"
     env_file:
       - .env
     volumes:
-      - ./:/home/app
+      - ./:/home/api
+    networks:
+      - nft-net
+
+  camo_rs:
+    build:
+      context: ./camo-rs
+      dockerfile: Dockerfile
+    hostname: camo_rs
+    container_name: camo_rs
+    ports:
+      - "8081:8081"
+    environment:
+      - CAMO_KEY=${CAMO_KEY}
+      - CAMO_ROOT_URL=/camo/
+      - CAMO_ALLOW_AUDIO=true
+      - CAMO_ALLOW_IMAGE=true
+      - CAMO_ALLOW_JSON=true
+      - CAMO_ALLOW_VIDEO=true
     networks:
       - nft-net
 

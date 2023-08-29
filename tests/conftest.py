@@ -68,7 +68,7 @@ def app(override_get_db: Callable) -> FastAPI:
 @pytest_asyncio.fixture()
 async def async_client(app: FastAPI) -> AsyncGenerator:
     async with AsyncClient(
-        app=app, base_url="http://192.168.1.203:8000/api/blocklist"
+        app=app, base_url="http://127.0.0.1:8090/api/blocklist"
     ) as ac:
         yield ac
 
