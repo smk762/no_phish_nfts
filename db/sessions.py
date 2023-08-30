@@ -151,5 +151,11 @@ def create_tables(local=False):
     eng = engine
     if local:
         eng = local_engine
+    else:
+        q = input(
+            "This will drop any existing tables and data, then create new, empty tables. Confirm [Y/y]? "
+        )
+        if not q.lower() == "y":
+            return
     SQLModel.metadata.drop_all(eng)
     SQLModel.metadata.create_all(eng)
