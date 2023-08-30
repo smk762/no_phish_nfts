@@ -11,7 +11,7 @@ services:
       - pgsql_db
       - camo_rs
     ports:
-      - "8090:8090"
+      - "127.0.0.1:${FASTAPI_PORT}:${FASTAPI_PORT}"
     env_file:
       - .env
     volumes:
@@ -26,7 +26,7 @@ services:
     hostname: camo_rs
     container_name: camo_rs
     ports:
-      - "8081:8081"
+      - "127.0.0.1:8081:8081"
     environment:
       - CAMO_KEY=${CAMO_KEY}
       - CAMO_ROOT_URL=/camo/
@@ -47,7 +47,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
-      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+      - "127.0.0.1:${POSTGRES_PORT}:${POSTGRES_PORT}"
     volumes:
       - db-postgres:/var/lib/postgresql/data
     networks:
