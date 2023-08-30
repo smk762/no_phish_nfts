@@ -1,9 +1,13 @@
 from fastapi import FastAPI, status
 from fastapi.openapi.utils import get_openapi
+from fastapi.responses import RedirectResponse
 
 from api.router import router
 from core.config import settings
 from middleware import LowerCaseMiddleware
+from api.routes.camo import router as camo_router
+
+
 
 app = FastAPI(
     title=settings.title,
@@ -16,6 +20,7 @@ app = FastAPI(
 )
 
 app.include_router(router, prefix=settings.api_prefix)
+app.include_router(camo_router, prefix="/url_decode", tags=["Decode URL"])
 app.middleware("http")(LowerCaseMiddleware())
 
 
@@ -35,6 +40,5 @@ def custom_openapi():
     }
     app.openapi_schema = openapi_schema
     return app.openapi_schema
-
 
 app.openapi = custom_openapi

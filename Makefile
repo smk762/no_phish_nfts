@@ -3,7 +3,9 @@ dev:
 	@docker compose -f docker-compose.yml up --build
 
 run:
+	@docker compose -f docker-compose.yml stop
 	@docker compose -f docker-compose.yml up --build -d
+	@docker compose -f ./docker-compose.yml logs -f --tail 33
 
 stop:
 	@docker compose -f docker-compose.yml stop
