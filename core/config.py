@@ -29,6 +29,7 @@ class GlobalConfig(BaseConfig):
     alchemy_api_key: str = os.environ.get("ALCHEMY_API_KEY")
     google_api_key: str = os.environ.get("GOOGLE_API_KEY")
     mnemonichq_api_key: str = os.environ.get("MNEMONICHQ_API_KEY")
+    camo_key: str = os.environ.get("CAMO_KEY")
     tags_metadata: dict = [
         {
             "name": "Wallet Addresses",
@@ -41,6 +42,10 @@ class GlobalConfig(BaseConfig):
         {
             "name": "Domains",
             "description": "Information about domains marked as malicious. Input should exclude `http://` and `https://`",
+        },
+        {
+            "name": "Decode Urls",
+            "description": "Decodes a hex string into a URL for image/audio/video/json content",
         },
     ]
 
