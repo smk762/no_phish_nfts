@@ -26,4 +26,4 @@ lint: run
 	@docker exec -it fastapi_nft poetry run black .
 	@docker exec -it fastapi_nft poetry run isort . --profile black
 
-.PHONY: coffee dev run stop shell tests lint
+.PHONY: dev run stop down logs shell tests lint

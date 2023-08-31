@@ -20,7 +20,7 @@ app = FastAPI(
 )
 
 app.include_router(router, prefix=settings.api_prefix)
-app.include_router(camo_router, prefix="/url_decode", tags=["Decode URL"])
+app.include_router(camo_router, prefix="/url", tags=["Encode / Decode Urls"])
 app.middleware("http")(LowerCaseMiddleware())
 
 

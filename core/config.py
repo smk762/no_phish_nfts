@@ -44,8 +44,8 @@ class GlobalConfig(BaseConfig):
             "description": "Information about domains marked as malicious. Input should exclude `http://` and `https://`",
         },
         {
-            "name": "Decode Urls",
-            "description": "Decodes a hex string into a URL for image/audio/video/json content",
+            "name": "Encode / Decode Urls",
+            "description": "Encode Urls to hex string, and use the hex string for accessing for image/audio/video/json content through a reverse proxy",
         },
     ]
 
