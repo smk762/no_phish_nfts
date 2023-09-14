@@ -5,6 +5,8 @@ from fastapi.responses import RedirectResponse
 from api.router import router
 from core.config import settings
 from middleware import LowerCaseMiddleware
+from fastapi.middleware.cors import CORSMiddleware
+
 from api.routes.camo import router as camo_router
 
 
@@ -22,7 +24,13 @@ app = FastAPI(
 app.include_router(router, prefix=settings.api_prefix)
 app.include_router(camo_router, prefix="/url", tags=["Encode / Decode Urls"])
 app.middleware("http")(LowerCaseMiddleware())
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def custom_openapi():
     if app.openapi_schema:
