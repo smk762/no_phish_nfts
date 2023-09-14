@@ -6,11 +6,14 @@ class LowerCaseMiddleware:
         self.DECODE_FORMAT = "latin-1"
 
     async def __call__(self, request: Request, call_next):
-        raw = request.scope["query_string"].decode(self.DECODE_FORMAT).lower()
-        request.scope["query_string"] = raw.encode(self.DECODE_FORMAT)
-
-        path = request.scope["path"].lower()
-        request.scope["path"] = path
+        # print(request.scope)
+        path = request.scope["path"]
+        if not path.startswith('/url'):
+            # Makes query string lowercase
+            raw = request.scope["query_string"].decode(self.DECODE_FORMAT).lower()
+            request.scope["query_string"] = raw.encode(self.DECODE_FORMAT)
+            # Makes path lowercase
+            request.scope["path"] = path.lower()
 
         response = await call_next(request)
         return response
