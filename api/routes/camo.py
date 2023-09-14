@@ -17,8 +17,10 @@ router = APIRouter()
 )
 async def decode_url(url_hex: str):
     hmac = helper.get_hmac(secret=settings.camo_key, url_hex=url_hex)
-    url = f'/camo/{hmac}/{url_hex}'
-    return RedirectResponse(url)
+    url = f'{settings.domain}/camo/{hmac}/{url_hex}'
+    print(url)
+    r = requests.get(url)
+    return r.json()
 
 
 @router.post(

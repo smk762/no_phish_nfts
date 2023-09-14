@@ -30,6 +30,7 @@ class GlobalConfig(BaseConfig):
     google_api_key: str = os.environ.get("GOOGLE_API_KEY")
     mnemonichq_api_key: str = os.environ.get("MNEMONICHQ_API_KEY")
     camo_key: str = os.environ.get("CAMO_KEY")
+    domain: str = os.environ.get("DOMAIN")
     tags_metadata: dict = [
         {
             "name": "Wallet Addresses",
