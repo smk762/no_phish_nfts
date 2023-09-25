@@ -2,6 +2,7 @@
 lists/domains/*
 lists/contracts/*
 !custom.json
+reported_spam.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
