@@ -7,6 +7,7 @@ services:
       dockerfile: Dockerfile
     hostname: fastapi_nft
     container_name: fastapi_nft
+    restart: always
     depends_on:
       - pgsql_db
       - camo_rs
@@ -25,6 +26,7 @@ services:
       dockerfile: Dockerfile
     hostname: camo_rs
     container_name: camo_rs
+    restart: always
     ports:
       - "127.0.0.1:8081:8081"
     environment:
@@ -41,7 +43,7 @@ services:
     image: postgres:14.3-alpine
     hostname: pgsql_db
     container_name: pgsql_db
-    restart: on-failure
+    restart: always
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
