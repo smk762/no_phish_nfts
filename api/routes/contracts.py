@@ -11,6 +11,7 @@ from db.repositories.contracts import ContractRepository
 from db.schemas.contracts import ContractAdd, ContractPatch, ContractRead
 from db.sessions import scan_contracts
 from enums import NetworkEnum
+from cache import Cache
 from logger import logger
 
 router = APIRouter()
@@ -113,3 +114,60 @@ async def delete_contract(
             detail=f"{network} contract '{contract_address}' not found!",
         )
     return await repository.delete(network=network, address=contract_address)
+
+@router.post(
+    "/report",
+    status_code=status.HTTP_200_OK,
+    name="report_contract",
+    summary="Reports an NFT contract as spam.",
+    description="Reported contracts will periodically be reviewed by thye Komodo Platform team & passed on to Moralis."
+)
+async def report_contract(network:  NetworkEnum, wallet_address: str, contract_address: str):
+    # {
+    #     "network": {
+    #         "contract_address": {
+    #             "reported_by": ["wallet_address", "wallet_address", "wallet_address"]
+    #          }
+    #     }
+    # }
+    cache = Cache()
+    reported_data = cache.load_jsonfile("reported_spam.json")
+    if network not in reported_data:
+        reported_data.update({network: {}})
+    if contract_address not in reported_data:
+        reported_data[network].update({contract_address: []})
+    if wallet_address not in reported_data[network][contract_address]:
+        reported_data[network][contract_address].append(wallet_address)
+        r = cache.save_jsonfile("reported_spam.json", reported_data)
+        if 'result' in r:
+            return {
+                "result": f"Thank you! Contract {contract_address} on {network} will be examined and if found to be spam will be submitted to Moralis."
+            }
+        else:
+            return {
+                "error": "Sorry, your report failed. Please try again later."
+            }
+    else:
+        return {
+            "error": f"Contract {contract_address} on {network} has already been reported."
+        }
+
+@router.post(
+    "/view_reported",
+    status_code=status.HTTP_200_OK,
+    name="view_reported_contracts",
+    summary="View NFT contracts which were reported as spam.",
+    description="Reported contracts will periodically be reviewed by the Komodo Platform team & passed on to Moralis."
+)
+
+async def view_reported():
+    # {
+    #     "network": {
+    #         "contract_address": {
+    #             "reported_by": ["wallet_address", "wallet_address", "wallet_address"]
+    #          }
+    #     }
+    # }
+    cache = Cache()
+    return cache.load_jsonfile("reported_spam.json")
+    
