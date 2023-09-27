@@ -3,6 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from pydantic import BaseModel
+from web3 import Web3
 
 from api.dependencies.repositories import get_repository
 from auth import edit_api_key_auth
@@ -115,6 +116,14 @@ async def delete_contract(
         )
     return await repository.delete(network=network, address=contract_address)
 
+
+def validate_evm_address(addr: str) -> str:
+    try:
+        return Web3.to_checksum_address(addr)
+    except ValueError:
+        return ''    
+
+
 @router.post(
     "/report",
     status_code=status.HTTP_200_OK,
@@ -122,20 +131,27 @@ async def delete_contract(
     summary="Reports an NFT contract as spam.",
     description="Reported contracts will periodically be reviewed by thye Komodo Platform team & passed on to Moralis."
 )
-async def report_contract(network:  NetworkEnum, wallet_address: str, contract_address: str):
-    # {
-    #     "network": {
-    #         "contract_address": {
-    #             "reported_by": ["wallet_address", "wallet_address", "wallet_address"]
-    #          }
-    #     }
-    # }
+async def report_contract(network:  NetworkEnum, wallet_addr: str, contract_addr: str):
+
+    wallet_address = validate_evm_address(wallet_addr)
+    if wallet_address == '':
+        return {"error": f"Wallet Address '{wallet_addr}' is invalid. Please try again."}
+
+    contract_address = validate_evm_address(contract_addr)
+    if contract_address == '':
+        return {"error": f"Contract Address '{contract_addr}' is invalid. Please try again."}
+
+    if contract_address == wallet_address:
+        return {"error": f"Contract Address is the same as Wallet Address '{contract_addr}'. Please try again."}
+
     cache = Cache()
     reported_data = cache.load_jsonfile("reported_spam.json")
     if network not in reported_data:
         reported_data.update({network: {}})
-    if contract_address not in reported_data:
+
+    if contract_address not in reported_data[network]:
         reported_data[network].update({contract_address: []})
+
     if wallet_address not in reported_data[network][contract_address]:
         reported_data[network][contract_address].append(wallet_address)
         r = cache.save_jsonfile("reported_spam.json", reported_data)
@@ -152,6 +168,7 @@ async def report_contract(network:  NetworkEnum, wallet_address: str, contract_a
             "error": f"Contract {contract_address} on {network} has already been reported."
         }
 
+
 @router.post(
     "/view_reported",
     status_code=status.HTTP_200_OK,
@@ -161,13 +178,5 @@ async def report_contract(network:  NetworkEnum, wallet_address: str, contract_a
 )
 
 async def view_reported():
-    # {
-    #     "network": {
-    #         "contract_address": {
-    #             "reported_by": ["wallet_address", "wallet_address", "wallet_address"]
-    #          }
-    #     }
-    # }
     cache = Cache()
     return cache.load_jsonfile("reported_spam.json")
-    
