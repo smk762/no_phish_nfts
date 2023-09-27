@@ -3,6 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from pydantic import BaseModel
+from web3 import Web3
 
 from api.dependencies.repositories import get_repository
 from auth import edit_api_key_auth
@@ -115,6 +116,7 @@ async def delete_contract(
         )
     return await repository.delete(network=network, address=contract_address)
 
+
 @router.post(
     "/report",
     status_code=status.HTTP_200_OK,
@@ -122,16 +124,18 @@ async def delete_contract(
     summary="Reports an NFT contract as spam.",
     description="Reported contracts will periodically be reviewed by thye Komodo Platform team & passed on to Moralis."
 )
-async def report_contract(network:  NetworkEnum, wallet_address: str, contract_address: str):
-    # {
-    #     "network": {
-    #         "contract_address": {
-    #             "reported_by": ["wallet_address", "wallet_address", "wallet_address"]
-    #          }
-    #     }
-    # }
+async def report_contract(network:  NetworkEnum, wallet_addr: str, contract_addr: str):
     cache = Cache()
     reported_data = cache.load_jsonfile("reported_spam.json")
+    try:
+        wallet_address = Web3.to_checksum_address(wallet_addr)
+    except ValueError:
+        return {"error": f"Wallet Address {wallet_addr} is invalid. Please try again."}
+    try:
+        contract_address = Web3.to_checksum_address(contract_addr)
+    except ValueError:
+        return {"error": f"Contract Address {contract_addr} is invalid. Please try again."}
+
     if network not in reported_data:
         reported_data.update({network: {}})
     if contract_address not in reported_data:
@@ -152,6 +156,7 @@ async def report_contract(network:  NetworkEnum, wallet_address: str, contract_a
             "error": f"Contract {contract_address} on {network} has already been reported."
         }
 
+
 @router.post(
     "/view_reported",
     status_code=status.HTTP_200_OK,
@@ -161,13 +166,6 @@ async def report_contract(network:  NetworkEnum, wallet_address: str, contract_a
 )
 
 async def view_reported():
-    # {
-    #     "network": {
-    #         "contract_address": {
-    #             "reported_by": ["wallet_address", "wallet_address", "wallet_address"]
-    #          }
-    #     }
-    # }
     cache = Cache()
     return cache.load_jsonfile("reported_spam.json")
     
