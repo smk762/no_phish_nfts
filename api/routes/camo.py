@@ -32,7 +32,7 @@ async def decode_url(url_hex: str):
         return RedirectResponse(url)
 
 @router.post(
-    "/encode/{url_hex}",
+    "/encode/{url}",
     status_code=status.HTTP_200_OK,
     name="Convert Url to hex",
     tags=["Encode / Decode Urls"],
