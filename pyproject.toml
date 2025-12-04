@@ -6,6 +6,7 @@ version = "0.0.1"
 description = "Simple API to check domains and contract addresses against a blocklist stored in a PGSQL database"
 authors = ["smk <smk@komodoplatform.com>"]
 homepage = "https://github.com/smk762/no_phish_nfts"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -19,6 +20,7 @@ python-dotenv = "^1.0.0"
 requests = "^2.31.0"
 psycopg2 = "^2.9.7"
 web3 = "^6.10.0"
+setuptools = "^68.0.0"
 
 
 [tool.poetry.dev-dependencies]
